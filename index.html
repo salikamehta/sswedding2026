@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Dashboard · S&S</title>
+<style>
+:root {
+  --purple:#7c3aed; --purple-light:#f5f3ff; --purple-mid:#c4b5fd;
+  --blue:#2563eb; --blue-light:#eff6ff; --blue-mid:#93c5fd;
+  --pink:#e8728a; --pink-light:#fdf0f3; --pink-mid:#f5c0cb;
+  --gold:#c9a84c; --gold-light:#fdf8ee;
+  --grad: linear-gradient(135deg,#7c3aed 0%,#2563eb 100%);
+  --text:#1a1a2e; --text-muted:#6b6b80; --text-light:#9999aa;
+  --surface:#ffffff; --surface-2:#f8f7fc;
+  --border:rgba(0,0,0,0.08); --border-strong:rgba(0,0,0,0.14);
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 2px 16px rgba(0,0,0,0.06); --shadow-lg:0 8px 40px rgba(0,0,0,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);background:var(--surface-2);min-height:100vh}
+
+/* ── loading ── */
+#loading-overlay{position:fixed;inset:0;background:var(--surface-2);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px}
+#loading-overlay .logo{font-size:48px}
+#loading-overlay p{font-size:14px;color:var(--text-muted)}
+.spinner{width:32px;height:32px;border:3px solid var(--purple-mid);border-top-color:var(--purple);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── landing hero ── */
+#page-landing{display:none}
+.hero{background:var(--grad);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero-rings{font-size:64px;margin-bottom:20px;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.hero h1{font-size:clamp(28px,5vw,52px);font-weight:700;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+.hero .subtitle{font-size:clamp(14px,2vw,18px);color:rgba(255,255,255,.75);margin-bottom:32px;line-height:1.6}
+.hero-date{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:99px;padding:8px 20px;color:#fff;font-size:14px;font-weight:500;margin-bottom:48px;backdrop-filter:blur(8px)}
+.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:800px;width:100%;margin-bottom:48px}
+.hero-card{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s;backdrop-filter:blur(8px)}
+.hero-card:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.hero-card .hc-icon{font-size:28px;margin-bottom:8px}
+.hero-card .hc-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:4px}
+.hero-card .hc-sub{font-size:12px;color:rgba(255,255,255,.65)}
+.hero-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;background:#fff;color:var(--purple);border:none;border-radius:99px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.2);transition:all .2s}
+.hero-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(0,0,0,.25)}
+.hero-btn.outline{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.5);box-shadow:none;margin-left:12px}
+.hero-btn.outline:hover{background:rgba(255,255,255,.1)}
+
+/* ── update form page ── */
+#page-update{display:none}
+.update-header{background:var(--grad);padding:24px;display:flex;align-items:center;gap:12px}
+.update-header h1{font-size:18px;font-weight:700;color:#fff}
+.update-header .back-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap}
+.update-body{max-width:640px;margin:0 auto;padding:24px 16px 60px}
+.uform-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.uform-card h3{font-size:14px;font-weight:600;margin-bottom:12px;color:var(--text)}
+.uform-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+@media(max-width:480px){.uform-row{grid-template-columns:1fr}}
+.uform-row.single{grid-template-columns:1fr}
+.uform-field label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.uform-field input,.uform-field select,.uform-field textarea{width:100%;padding:9px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;color:var(--text);background:var(--surface);outline:none;font-family:inherit}
+.uform-field input:focus,.uform-field select:focus,.uform-field textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,58,237,.1)}
+.uform-field textarea{resize:vertical;min-height:72px;line-height:1.5}
+.uform-submit{width:100%;padding:13px;background:var(--grad);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.2px}
+.uform-submit:hover{opacity:.92}
+.uform-success{background:#f0fdf6;border:1px solid #a7f3c8;border-radius:var(--radius);padding:20px;text-align:center;display:none}
+.uform-success h3{color:#166534;margin-bottom:4px}
+.uform-success p{font-size:13px;color:#4b7a5e}
+
+/* ── dash header ── */
+.dash-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;gap:10px}
+.dash-header .brand{font-size:15px;font-weight:700;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.dash-header .brand-icon{font-size:18px;-webkit-text-fill-color:initial}
+.dash-nav{display:flex;gap:2px;overflow-x:auto}
+.dash-nav button{font-size:13px;padding:6px 11px;border:none;background:transparent;cursor:pointer;color:var(--text-muted);border-radius:6px;white-space:nowrap}
+.dash-nav button.active{background:var(--purple-light);color:var(--purple);font-weight:600}
+.dash-nav button:hover:not(.active){background:var(--surface-2)}
+.dash-header .hdr-btns{display:flex;gap:6px;flex-shrink:0}
+.hdr-btn{font-size:12px;padding:5px 10px;border:1px solid var(--border-strong);background:transparent;border-radius:6px;cursor:pointer;color:var(--text-muted);white-space:nowrap}
+.hdr-btn:hover{background:var(--surface-2)}
+.hdr-btn.primary{background:var(--grad);color:#fff;border:none}
+
+/* ── layout ── */
+.dash-body{max-width:1200px;margin:0 auto;padding:24px 16px 60px}
+.dash-section{display:none}
+.dash-section.active{display:block}
+
+/* ── stat cards ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.stat-card.accent{background:var(--grad);border-color:transparent}
+.stat-card.accent .s-label,.stat-card.accent .s-sub{color:rgba(255,255,255,.7)}
+.stat-card.accent .s-val{color:#fff}
+.s-label{font-size:12px;color:var(--text-muted);margin-bottom:6px}
+.s-val{font-size:28px;font-weight:700;color:var(--text)}
+.s-sub{font-size:12px;color:var(--text-light);margin-top:2px}
+
+/* ── table ── */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.table-toolbar h3{font-size:14px;font-weight:600}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:9px 12px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf8ff}
+
+/* ── badges ── */
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.badge.green{background:#f0fdf6;color:#166534}
+.badge.red{background:#fff0f1;color:#9b1c1c}
+.badge.amber{background:#fffbeb;color:#92400e}
+.badge.blue{background:#eff6ff;color:#1e40af}
+.badge.purple{background:#f5f3ff;color:#5b21b6}
+.badge.gray{background:var(--surface-2);color:var(--text-muted)}
+.badge.bride{background:#fdf0f3;color:#9b2c4a}
+.badge.groom{background:#eff6ff;color:#1e4080}
+
+/* ── filters / buttons ── */
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.filter-btn{font-size:12px;padding:5px 12px;border:1px solid var(--border-strong);background:transparent;border-radius:99px;cursor:pointer;color:var(--text-muted)}
+.filter-btn.on{background:var(--purple);border-color:var(--purple);color:#fff}
+.search-input{font-size:13px;padding:6px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);outline:none;color:var(--text);background:var(--surface)}
+.search-input:focus{border-color:var(--purple)}
+.btn-purple{font-size:13px;padding:7px 16px;background:var(--grad);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:500}
+.btn-outline{font-size:13px;padding:7px 14px;border:1px solid var(--border-strong);background:var(--surface);border-radius:var(--radius-sm);cursor:pointer;color:var(--text)}
+.btn-outline:hover{background:var(--surface-2)}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.section-header h2{font-size:18px;font-weight:700}
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-muted);font-size:14px}
+.empty-state .icon{font-size:40px;margin-bottom:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.error-banner{background:#fff0f1;border:1px solid #fca5a5;border-radius:var(--radius);padding:14px 18px;font-size:13px;color:#9b1c1c;margin-bottom:16px}
+
+/* ── transport ── */
+.ai-panel{background:linear-gradient(135deg,#f5f3ff,#eff6ff);border:1px solid var(--purple-mid);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px}
+.ai-panel h3{font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.ai-panel p{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:14px}
+.ai-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.ai-controls input{font-size:13px;padding:8px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);outline:none;color:var(--text);background:var(--surface);flex:1;min-width:180px}
+.ai-controls input:focus{border-color:var(--purple)}
+.ai-controls .small-input{flex:0 0 80px;min-width:80px}
+.ai-btn{padding:9px 18px;background:var(--grad);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.ai-result{margin-top:14px;padding-top:14px;border-top:1px solid var(--purple-mid);font-size:13px;color:var(--text-muted);line-height:1.6;display:none}
+.conflict-item{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:#92400e;margin-bottom:6px}
+.thinking{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted)}
+.dots span{display:inline-block;animation:blink 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.transport-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.transport-grid{grid-template-columns:1fr}}
+.run-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.run-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.run-title{font-size:14px;font-weight:600}
+.run-meta{font-size:12px;color:var(--text-muted);margin-top:2px}
+.guest-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.chip{font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;padding:3px 9px}
+.flight-tracker{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.flight-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;flex-wrap:wrap}
+.flight-row:last-child{border-bottom:none}
+.fl-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px}
+.fl-status.on-time{background:#f0fdf6;color:#166534}
+.fl-status.delayed{background:#fffbeb;color:#92400e}
+.fl-status.unknown{background:var(--surface-2);color:var(--text-muted)}
+.fl-status.checking{background:#f5f3ff;color:var(--purple)}
+
+/* ── hotel v3 ── */
+.hotel-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
+.hsb{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.hsb-val{font-size:22px;font-weight:700;color:var(--text)}
+.hsb-lbl{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+/* floor tabs */
+.floor-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.floor-tab{font-size:12px;padding:6px 14px;border:1px solid var(--border-strong);background:var(--surface);border-radius:99px;cursor:pointer;color:var(--text-muted);font-weight:500}
+.floor-tab.active{background:var(--grad);color:#fff;border-color:transparent}
+.floor-tab .ft-count{font-size:10px;opacity:.75;margin-left:4px}
+
+/* floor builder */
+.floor-builder{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px}
+.floor-builder h3{font-size:14px;font-weight:600;margin-bottom:12px}
+.floor-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.floor-row input{font-size:13px;padding:7px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);outline:none;color:var(--text);background:var(--surface)}
+.floor-row input:focus{border-color:var(--purple)}
+.floor-row .fl-name{flex:1;min-width:100px}
+.floor-row .fl-rooms-input{width:280px}
+.fl-rooms-hint{font-size:11px;color:var(--text-muted);margin-top:3px}
+.floor-row .fl-side-sel{width:110px}
+.floor-row .fl-remove{background:none;border:1px solid var(--border-strong);border-radius:6px;padding:5px 8px;cursor:pointer;color:var(--text-muted);font-size:12px}
+
+/* group assignment list */
+.group-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.group-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.group-row.declined{opacity:.45}
+.gr-names{flex:1;min-width:150px}
+.gr-names strong{font-size:13px;display:block;margin-bottom:1px}
+.gr-names span{font-size:11px;color:var(--text-muted)}
+.gr-pax{font-size:13px;font-weight:600;color:var(--text-muted);white-space:nowrap}
+.gr-sel{font-size:12px;padding:5px 8px;border:1px solid var(--border-strong);border-radius:6px;outline:none;color:var(--text);background:var(--surface);min-width:120px}
+.gr-assigned{font-size:12px;font-weight:700;color:var(--purple);white-space:nowrap}
+
+/* room map */
+.floor-map-section{margin-bottom:24px}
+.floor-map-section h4{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.floor-map-section h4 span{font-size:11px;font-weight:400}
+.room-grid-v3{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.rt3{border:1px solid var(--border-strong);border-radius:8px;padding:8px 6px;text-align:center;font-size:11px;cursor:pointer;transition:all .15s;background:var(--surface-2);min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.rt3:hover{transform:scale(1.04);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.rt3 .rt3-num{font-size:15px;font-weight:700}
+.rt3 .rt3-name{font-size:9px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);line-height:1.3}
+.rt3 .rt3-sub{font-size:8px;color:var(--text-light)}
+.rt3.free-bride{background:#fdf0f3;border-color:#f5c0cb}
+.rt3.free-groom{background:#eff6ff;border-color:#93c5fd}
+.rt3.free-mixed{background:#f5f3ff;border-color:#c4b5fd}
+.rt3.occ-bride{background:#e8728a;border-color:#d4547a;color:#fff}
+.rt3.occ-bride .rt3-name,.rt3.occ-bride .rt3-sub{color:rgba(255,255,255,.85)}
+.rt3.occ-groom{background:#2563eb;border-color:#1d4ed8;color:#fff}
+.rt3.occ-groom .rt3-name,.rt3.occ-groom .rt3-sub{color:rgba(255,255,255,.85)}
+.rt3.occ-mixed{background:#7c3aed;border-color:#6d28d9;color:#fff}
+.rt3.occ-mixed .rt3-name,.rt3.occ-mixed .rt3-sub{color:rgba(255,255,255,.85)}
+
+/* floating picker */
+#room-picker{display:none;position:fixed;z-index:300;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-lg);min-width:260px;max-width:320px}
+#room-picker h4{font-size:13px;font-weight:600;margin-bottom:10px}
+#room-picker select{width:100%;font-size:13px;padding:8px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);outline:none;margin-bottom:10px;color:var(--text)}
+#room-picker select:focus{border-color:var(--purple)}
+.picker-btns{display:flex;gap:8px}
+.picker-btns button{flex:1;padding:8px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer}
+.picker-confirm{background:var(--grad);color:#fff;border:none}
+.picker-cancel{background:transparent;border:1px solid var(--border-strong);color:var(--text)}
+
+/* ── checklist ── */
+.checklist-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.checklist-item:last-child{border-bottom:none}
+.checklist-item input[type=checkbox]{width:17px;height:17px;accent-color:var(--purple);cursor:pointer;flex-shrink:0}
+.task-text{flex:1;font-size:14px}
+.checklist-item.done .task-text{text-decoration:line-through;color:var(--text-light)}
+.add-task-row{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.add-task-row input{flex:1;min-width:160px;padding:9px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;outline:none;color:var(--text)}
+.add-task-row input:focus{border-color:var(--purple)}
+.add-task-row select{padding:9px 26px 9px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;outline:none;color:var(--text);background:var(--surface);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236b6b80' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.add-task-row button{padding:9px 16px;background:var(--grad);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.progress-bar-wrap{background:var(--border);border-radius:99px;height:6px;margin-bottom:16px;overflow:hidden}
+.progress-bar{height:100%;border-radius:99px;background:var(--grad);transition:width .4s}
+
+@media(max-width:600px){
+  .dash-header{padding:0 10px}
+  .dash-nav button{font-size:11px;padding:5px 7px}
+  .dash-body{padding:16px 10px 60px}
+  th,td{padding:7px 8px}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+  <div class="logo">💍</div>
+  <div class="spinner"></div>
+  <p id="loading-msg">Loading…</p>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- LANDING PAGE -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-landing">
+  <div class="hero">
+    <div class="hero-rings">💍</div>
+    <h1>Shreyas &amp; Salika</h1>
+    <p class="subtitle">Join us for a celebration of love, family, and new beginnings</p>
+    <div class="hero-date">📅 &nbsp;Wedding Date · <strong id="hero-date-txt">TBD</strong></div>
+    <div class="hero-cards">
+      <div class="hero-card" onclick="showUpdateForm()">
+        <div class="hc-icon">✏️</div>
+        <div class="hc-title">Update my details</div>
+        <div class="hc-sub">Confirm RSVP, travel &amp; accommodation</div>
+      </div>
+      <div class="hero-card" onclick="showDashPage()">
+        <div class="hc-icon">📊</div>
+        <div class="hc-title">Organiser dashboard</div>
+        <div class="hc-sub">Full guest &amp; logistics overview</div>
+      </div>
+      <div class="hero-card" onclick="showDashPage();showDash('transport')">
+        <div class="hc-icon">🚗</div>
+        <div class="hc-title">Transport planner</div>
+        <div class="hc-sub">AI pickup &amp; drop organiser</div>
+      </div>
+      <div class="hero-card" onclick="showDashPage();showDash('hotel')">
+        <div class="hc-icon">🏨</div>
+        <div class="hc-title">Hotel &amp; rooms</div>
+        <div class="hc-sub">Room allocation map</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- GUEST UPDATE FORM -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-update">
+  <div class="update-header">
+    <button class="back-btn" onclick="showLanding()">← Back</button>
+    <h1>💍 Update your details</h1>
+  </div>
+  <div class="update-body">
+    <div class="uform-card">
+      <h3>Find your name</h3>
+      <div class="uform-row single">
+        <div class="uform-field">
+          <label>Your name (as on the guest list)</label>
+          <input type="text" id="uf-search" placeholder="Start typing your name…" oninput="searchGuest()">
+        </div>
+      </div>
+      <div id="uf-matches" style="margin-top:8px"></div>
+    </div>
+    <div id="uf-form" style="display:none">
+      <div class="uform-card">
+        <h3>RSVP</h3>
+        <div class="uform-row">
+          <div class="uform-field">
+            <label>Attending?</label>
+            <select id="uf-rsvp">
+              <option value="Yes">Yes, attending!</option>
+              <option value="Waiting">Yet to confirm</option>
+              <option value="No">Cannot attend</option>
+            </select>
+          </div>
+          <div class="uform-field">
+            <label>Number of people (your group)</label>
+            <input type="number" id="uf-qty" min="0" max="20">
+          </div>
+        </div>
+      </div>
+      <div class="uform-card">
+        <h3>Travel details</h3>
+        <div class="uform-row">
+          <div class="uform-field">
+            <label>Needs airport pickup?</label>
+            <select id="uf-pickup">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+              <option value="Maybe">Maybe</option>
+            </select>
+          </div>
+          <div class="uform-field">
+            <label>Arrival time</label>
+            <input type="text" id="uf-arrtime" placeholder="e.g. 14 Feb, 10:30 AM">
+          </div>
+        </div>
+        <div class="uform-row">
+          <div class="uform-field">
+            <label>Flight details</label>
+            <input type="text" id="uf-flight" placeholder="e.g. 6E 422 from Delhi">
+          </div>
+          <div class="uform-field">
+            <label>Train details</label>
+            <input type="text" id="uf-train" placeholder="e.g. 12051 from Mumbai">
+          </div>
+        </div>
+        <div class="uform-row">
+          <div class="uform-field">
+            <label>Needs airport drop?</label>
+            <select id="uf-drop">
+              <option value="No">No</option>
+              <option value="Yes">Yes</option>
+            </select>
+          </div>
+          <div class="uform-field">
+            <label>Departure time</label>
+            <input type="text" id="uf-droptime" placeholder="e.g. 16 Feb, 6:00 PM">
+          </div>
+        </div>
+      </div>
+      <div class="uform-card">
+        <h3>Accommodation</h3>
+        <div class="uform-row single">
+          <div class="uform-field">
+            <label>Hotel room required?</label>
+            <select id="uf-accom">
+              <option value="No">No, I have my own arrangements</option>
+              <option value="Yes">Yes, please arrange a room</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="uf-success" class="uform-success">
+        <h3>✅ Details updated!</h3>
+        <p>Thank you. Your information has been saved and the family has been notified.</p>
+      </div>
+      <button class="uform-submit" id="uf-submit" onclick="submitUpdate()">Save my details →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- DASHBOARD -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="page-dash" style="display:none">
+  <header class="dash-header">
+    <div class="brand"><span class="brand-icon">💍</span> Shreyas &amp; Salika <span id="data-source" style="font-size:10px;font-weight:400;margin-left:4px;-webkit-text-fill-color:var(--text-light)"></span></div>
+    <nav class="dash-nav">
+      <button class="active" onclick="showDash('overview')">Overview</button>
+      <button onclick="showDash('guests')">Guests</button>
+      <button onclick="showDash('transport')">Transport</button>
+      <button onclick="showDash('hotel')">Hotel</button>
+      <button onclick="showDash('checklist')">Checklist</button>
+    </nav>
+    <div class="hdr-btns">
+      <button class="hdr-btn" onclick="loadSheet()">↻ Refresh</button>
+      <button class="hdr-btn" onclick="showLanding()">← Home</button>
+    </div>
+  </header>
+
+  <div class="dash-body">
+
+    <!-- OVERVIEW -->
+    <div id="dash-overview" class="dash-section active">
+      <div class="stat-grid" id="dash-stats"></div>
+      <div class="two-col">
+        <div class="table-wrap">
+          <div class="table-toolbar"><h3>RSVP breakdown</h3></div>
+          <table><thead><tr><th>Status</th><th>Bride pax</th><th>Groom pax</th><th>Total pax</th></tr></thead>
+          <tbody id="rsvp-breakdown-tbody"></tbody></table>
+        </div>
+        <div class="table-wrap">
+          <div class="table-toolbar"><h3>Accommodation groups</h3></div>
+          <table><thead><tr><th>Group</th><th>Side</th><th>Pax</th><th>Room</th></tr></thead>
+          <tbody id="hotel-summary-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- GUESTS -->
+    <div id="dash-guests" class="dash-section">
+      <div class="section-header">
+        <h2>Guest list</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <input type="text" class="search-input" id="g-search" placeholder="Search…" oninput="renderGuestTable()">
+          <button class="btn-purple" onclick="exportCSV()">Export CSV</button>
+        </div>
+      </div>
+      <div class="filter-row" id="guest-filter-row">
+        <button class="filter-btn on" onclick="setGuestFilter(this,'all')">All</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'yes')">Confirmed</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'waiting')">Waiting</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'no')">Declined</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'hotel')">Needs room</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'pickup')">Pickup</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'drop')">Drop</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'bride')">Bride</button>
+        <button class="filter-btn" onclick="setGuestFilter(this,'groom')">Groom</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-scroll">
+          <table><thead><tr><th>#</th><th>Name</th><th>Side</th><th>RSVP</th><th>Qty</th><th>Hotel</th><th>Room</th><th>Pickup</th><th>Arrival</th><th>Drop</th><th>Departure</th><th>Flight</th><th>Train</th></tr></thead>
+          <tbody id="guest-tbody"></tbody></table>
+        </div>
+        <div id="guest-empty" class="empty-state" style="display:none"><div class="icon">👋</div>No guests match this filter.</div>
+      </div>
+    </div>
+
+    <!-- TRANSPORT -->
+    <div id="dash-transport" class="dash-section">
+      <div class="section-header"><h2>Transport planner</h2></div>
+
+      <!-- flight tracker -->
+      <div class="table-wrap" style="margin-bottom:20px">
+        <div class="table-toolbar" style="justify-content:space-between">
+          <h3>✈️ Live flight tracker</h3>
+          <button class="btn-purple" style="font-size:12px;padding:5px 12px" onclick="checkAllFlights()">Check all flights</button>
+        </div>
+        <div id="flight-tracker-body" style="padding:8px 16px">
+          <p style="font-size:13px;color:var(--text-muted);padding:12px 0">Add flight details in the Guest list then click "Check all flights" to fetch live status via AviationStack.</p>
+        </div>
+      </div>
+
+      <!-- AI panel -->
+      <div class="ai-panel">
+        <h3>✨ AI transport organiser</h3>
+        <p>Enter your vehicles and drive time, then click <strong>Auto-organise</strong>. Claude clusters arrivals/departures within 45-min windows, assigns vehicles by capacity, and flags conflicts.</p>
+        <div class="ai-controls">
+          <input type="text" id="ai-vehicles" value="Tempo Traveller (12 pax), Innova (6 pax), Sedan (4 pax)" placeholder="Vehicles and capacities">
+          <input type="number" id="ai-drive" value="45" class="small-input" placeholder="Mins">
+          <button class="ai-btn" onclick="runAI()">Auto-organise ✦</button>
+        </div>
+        <div class="ai-result" id="ai-result"></div>
+      </div>
+      <div id="conflict-list" style="margin-bottom:12px"></div>
+      <div id="transport-runs">
+        <div class="empty-state"><div class="icon">🚗</div><div id="transport-pending-msg">Add flight / arrival info in the Guest list, then click Auto-organise.</div></div>
+      </div>
+    </div>
+
+    <!-- HOTEL -->
+    <div id="dash-hotel" class="dash-section">
+      <div class="section-header">
+        <h2>Hotel &amp; rooms</h2>
+        <button class="btn-outline" onclick="resetAllRooms()" style="font-size:12px">Reset all assignments</button>
+      </div>
+
+      <!-- summary stats -->
+      <div class="hotel-stats" id="hotel-stats"></div>
+
+      <!-- floor builder -->
+      <div class="floor-builder" id="floor-builder">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <h3>Floors &amp; room numbers</h3>
+          <button class="btn-purple" onclick="addFloor()" style="font-size:12px;padding:5px 12px">+ Add floor</button>
+        </div>
+        <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">Enter your actual room numbers for each floor — separate with commas, use ranges (101-105) or both. E.g. <em>102, 104, 107, 201-205</em></p>
+        <div id="floor-rows"></div>
+      </div>
+
+      <!-- group assignment -->
+      <div class="table-wrap" style="padding:16px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-size:13px;font-weight:600">Assign rooms to groups</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Groups from your sheet. Select a real room number from the dropdown.</div>
+          </div>
+          <div class="filter-row" style="margin-bottom:0" id="hotel-filter-row">
+            <button class="filter-btn on" onclick="setHotelFilter(this,'all')">All</button>
+            <button class="filter-btn" onclick="setHotelFilter(this,'unassigned')">Unassigned</button>
+            <button class="filter-btn" onclick="setHotelFilter(this,'bride')">Bride</button>
+            <button class="filter-btn" onclick="setHotelFilter(this,'groom')">Groom</button>
+            <button class="filter-btn" onclick="setHotelFilter(this,'confirmed')">Confirmed</button>
+          </div>
+        </div>
+        <div id="group-list"></div>
+      </div>
+
+      <!-- room map -->
+      <div class="table-wrap" style="padding:16px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Room map — click to assign or unassign</div>
+        <div style="display:flex;gap:14px;font-size:11px;margin-bottom:14px;flex-wrap:wrap">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#e8728a;margin-right:4px"></span>Bride (occupied)</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#2563eb;margin-right:4px"></span>Groom (occupied)</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#7c3aed;margin-right:4px"></span>Mixed (occupied)</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fdf0f3;border:1px solid #f5c0cb;margin-right:4px"></span>Free</span>
+        </div>
+        <div id="floor-map"></div>
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div id="dash-checklist" class="dash-section">
+      <div class="section-header"><h2>Wedding checklist</h2></div>
+      <div class="table-wrap" style="padding:20px">
+        <div id="progress-label" style="font-size:13px;color:var(--text-muted);margin-bottom:8px"></div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+        <div id="checklist-items"></div>
+        <div class="add-task-row">
+          <input type="text" id="task-input" placeholder="Add a task…" onkeydown="if(event.key==='Enter')addTask()">
+          <select id="task-cat">
+            <option value="Venue">Venue</option><option value="Catering">Catering</option>
+            <option value="Decor">Decor</option><option value="Attire">Attire</option>
+            <option value="Guests">Guests</option><option value="Transport">Transport</option>
+            <option value="Other">Other</option>
+          </select>
+          <button onclick="addTask()">+ Add</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end dash-body -->
+</div><!-- end page-dash -->
+
+<!-- floating room picker -->
+<div id="room-picker">
+  <h4>Assign room <span id="picker-room-label" style="color:var(--purple)"></span></h4>
+  <select id="picker-group-sel"></select>
+  <div class="picker-btns">
+    <button class="picker-confirm" onclick="confirmPick()">Assign</button>
+    <button class="picker-cancel" onclick="closePicker()">Cancel</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG — one endpoint, handles everything
+// ══════════════════════════════════════════════════════
+// API endpoint — works on Netlify (same-origin /api) or direct Apps Script fallback
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwrwJEzq3P5eKH9PDvtWKY252FL2bNomJIRr-j-aRnZ9V-JVBVJ4kwYIyxn8gcqJRiomw/exec';
+var API = window.location.hostname === 'localhost' || window.location.protocol === 'file:'
+  ? null   // local file — will use Apps Script fallback
+  : '/api'; // on Netlify — use the serverless function
+var AVIATIONSTACK_KEY = ''; // Optional: paste key from aviationstack.com for live flight status
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+var guests = [];
+var dataSource = 'snapshot';
+var guestFilter = 'all';
+var hotelFilter = 'all';
+var aiRuns = [];
+var pickerTargetRoom = null;
+var pickerTargetFloor = null;
+var ufSelectedGuest = null;
+var flightStatuses = {};
+
+var floors = [
+  { id:1, label:'Floor 1', side:'bride', rooms:[] },
+  { id:2, label:'Floor 2', side:'groom', rooms:[] },
+  { id:3, label:'Floor 3', side:'mixed', rooms:[] },
+];
+var roomAssignments = {};
+
+var taskId = 10;
+var tasks = [
+  {id:1,text:'Confirm venue booking',cat:'Venue',done:false},
+  {id:2,text:'Finalise catering menu',cat:'Catering',done:false},
+  {id:3,text:'Book photographer & videographer',cat:'Other',done:false},
+  {id:4,text:'Arrange floral decor',cat:'Decor',done:false},
+  {id:5,text:'Confirm airport vehicle bookings',cat:'Transport',done:false},
+  {id:6,text:'Share transport details with pickup guests',cat:'Guests',done:false},
+  {id:7,text:'Send room number confirmations',cat:'Guests',done:false},
+];
+
+// ══════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ══════════════════════════════════════════════════════
+function setPage(id) {
+  ['landing','update','dash'].forEach(function(p){
+    var el = document.getElementById('page-'+p);
+    if (el) el.style.display = p===id ? 'block' : 'none';
+  });
+}
+function showLanding()    { setPage('landing'); }
+function showUpdateForm() { setPage('update'); }
+function showDashPage()   { setPage('dash'); showDash('overview'); }
+
+// ══════════════════════════════════════════════════════
+// DATA LOAD
+// ══════════════════════════════════════════════════════
+function setMsg(t) { var el=document.getElementById('loading-msg'); if(el) el.textContent=t; }
+
+async function loadSheet() {
+  document.getElementById('loading-overlay').style.display = 'flex';
+  setPage('landing');
+
+  // Try Netlify function first (when deployed), then Apps Script, then snapshot
+  var loaded = false;
+
+  // Attempt 1: Netlify /api (only when hosted on Netlify)
+  if (API && !loaded) {
+    try {
+      setMsg('Connecting to server…');
+      var res = await fetch(API + '?action=read');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var json = await res.json();
+      if (!Array.isArray(json) || !json.length) throw new Error('Empty response from /api');
+      guests = json;
+      dataSource = 'live';
+      loaded = true;
+      setMsg('Loaded ' + json.length + ' guests ✓');
+    } catch(e) {
+      setMsg('Server error: ' + e.message + ' — trying Apps Script…');
+      console.warn('Netlify /api failed:', e);
+    }
+  }
+
+  // Attempt 2: Apps Script (works when file opened locally or as backup)
+  if (!loaded) {
+    try {
+      setMsg('Fetching from Google Sheets…');
+      var res2 = await fetch(APPS_SCRIPT_URL);
+      if (!res2.ok) throw new Error('HTTP ' + res2.status);
+      var json2 = await res2.json();
+      if (!Array.isArray(json2) || !json2.length) throw new Error('Empty response from Apps Script');
+      guests = json2;
+      dataSource = 'live';
+      loaded = true;
+      setMsg('Loaded ' + json2.length + ' guests ✓');
+    } catch(e) {
+      setMsg('Apps Script error: ' + e.message + ' — using offline snapshot…');
+      console.warn('Apps Script failed:', e);
+    }
+  }
+
+  // Attempt 3: Embedded snapshot
+  if (!loaded) {
+    await new Promise(function(r){ setTimeout(r, 800); });
+    guests = EMBEDDED_DATA;
+    dataSource = 'snapshot';
+    setMsg('Loaded offline snapshot (' + guests.length + ' guests)');
+  }
+
+  savePersist();
+  document.getElementById('loading-overlay').style.display = 'none';
+  var ds = document.getElementById('data-source');
+  if (ds) {
+    ds.textContent = dataSource === 'live' ? '● Live' : '⚠ Offline';
+    ds.style.color  = dataSource === 'live' ? '#166534' : '#92400e';
+  }
+  setPage('landing');
+}
+
+// ══════════════════════════════════════════════════════
+// PERSISTENCE (localStorage for room assignments + tasks)
+// ══════════════════════════════════════════════════════
+function savePersist() {
+  try {
+    localStorage.setItem('weddingRooms', JSON.stringify(roomAssignments));
+    localStorage.setItem('weddingFloors', JSON.stringify(floors));
+    localStorage.setItem('weddingTasks', JSON.stringify(tasks));
+  } catch(e){}
+}
+function loadPersist() {
+  try {
+    var ra = localStorage.getItem('weddingRooms');
+    if (ra) roomAssignments = JSON.parse(ra);
+    var fl = localStorage.getItem('weddingFloors');
+    if (fl) floors = JSON.parse(fl);
+    var tk = localStorage.getItem('weddingTasks');
+    if (tk) tasks = JSON.parse(tk);
+  } catch(e){}
+}
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+function showDash(tab) {
+  document.querySelectorAll('.dash-section').forEach(function(s){ s.classList.remove('active'); });
+  document.querySelectorAll('.dash-nav button').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('dash-'+tab).classList.add('active');
+  var tabs = ['overview','guests','transport','hotel','checklist'];
+  var idx = tabs.indexOf(tab);
+  if (idx>=0) document.querySelectorAll('.dash-nav button')[idx].classList.add('active');
+  if (tab==='overview')  renderOverview();
+  if (tab==='guests')    renderGuestTable();
+  if (tab==='transport') renderTransportPage();
+  if (tab==='hotel')     renderHotelPage();
+  if (tab==='checklist') renderChecklist();
+}
+
+// ══════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════
+function qty(g){ var v=parseInt(g['Quantity']); return (isNaN(v)||v<0)?0:v; }
+function rsvpVal(g){ return (g['RSVP']||'').toLowerCase(); }
+function rsvpBadge(r){
+  var v=(r||'').toLowerCase();
+  if(v==='yes')     return '<span class="badge green">Confirmed</span>';
+  if(v==='no')      return '<span class="badge red">Declined</span>';
+  if(v==='waiting') return '<span class="badge amber">Waiting</span>';
+  return '<span class="badge gray">'+(r||'—')+'</span>';
+}
+function sideBadge(s){
+  var v=(s||'').toLowerCase();
+  if(v==='bride') return '<span class="badge bride">Bride</span>';
+  if(v==='groom') return '<span class="badge groom">Groom</span>';
+  return '<span class="badge gray">'+(s||'—')+'</span>';
+}
+function yesnoBadge(v){
+  var lv=(v||'').toLowerCase();
+  if(lv==='yes')   return '<span class="badge green">Yes</span>';
+  if(lv==='maybe') return '<span class="badge amber">Maybe</span>';
+  if(lv==='no')    return '—';
+  return v ? '<span class="badge amber">'+v+'</span>' : '—';
+}
+function sc(label,val,color,sub){
+  var vc = color==='green'?'#166534':color==='amber'?'#92400e':color==='red'?'#9b1c1c':color==='blue'?'#1e40af':color==='purple'?'#5b21b6':'var(--text)';
+  return '<div class="stat-card"><div class="s-label">'+label+'</div><div class="s-val" style="color:'+vc+'">'+val+'</div>'+(sub?'<div class="s-sub">'+sub+'</div>':'')+'</div>';
+}
+
+// ══════════════════════════════════════════════════════
+// OVERVIEW
+// ══════════════════════════════════════════════════════
+function renderOverview(){
+  var confirmed = guests.filter(function(g){ return rsvpVal(g)==='yes'; });
+  var waiting   = guests.filter(function(g){ return rsvpVal(g)==='waiting'; });
+  var declined  = guests.filter(function(g){ return rsvpVal(g)==='no'; });
+  var needPickup= guests.filter(function(g){ return (g['Pick up needed']||'').toLowerCase()==='yes'; });
+  var needDrop  = guests.filter(function(g){ return (g['Drop needed']||'').toLowerCase()==='yes'; });
+  var withAccom = guests.filter(function(g){ return (g['Accomodation']||'').toLowerCase()==='yes'; });
+  var totalPax  = guests.reduce(function(a,g){ return a+qty(g); },0);
+  var confPax   = confirmed.reduce(function(a,g){ return a+qty(g); },0);
+  var waitPax   = waiting.reduce(function(a,g){ return a+qty(g); },0);
+  var declPax   = declined.reduce(function(a,g){ return a+qty(g); },0);
+
+  document.getElementById('dash-stats').innerHTML =
+    sc('Total pax',totalPax,'',''+guests.length+' entries') +
+    sc('Confirmed',confPax,'green',confirmed.length+' entries') +
+    sc('Waiting',waitPax,'amber',waiting.length+' entries') +
+    sc('Declined',declPax,'red',declined.length+' entries') +
+    sc('Need room',withAccom.length,'blue','') +
+    sc('Pickups',needPickup.reduce(function(a,g){return a+qty(g);},0),'',''+needPickup.length+' entries') +
+    sc('Drops',needDrop.reduce(function(a,g){return a+qty(g);},0),'',''+needDrop.length+' entries');
+
+  // RSVP table
+  var statuses=['Yes','Waiting','No'];
+  var bTotal=0, gTotal=0;
+  var rows = statuses.map(function(s){
+    var bg=guests.filter(function(g){return g['Side']==='Bride'&&(g['RSVP']||'')==s;});
+    var gr=guests.filter(function(g){return g['Side']==='Groom'&&(g['RSVP']||'')==s;});
+    var bp=bg.reduce(function(a,g){return a+qty(g);},0);
+    var gp=gr.reduce(function(a,g){return a+qty(g);},0);
+    bTotal+=bp; gTotal+=gp;
+    return '<tr><td>'+rsvpBadge(s)+'</td><td>'+bp+'<span style="font-size:10px;color:var(--text-light)"> ('+bg.length+')</span></td><td>'+gp+'<span style="font-size:10px;color:var(--text-light)"> ('+gr.length+')</span></td><td><strong>'+(bp+gp)+'</strong></td></tr>';
+  });
+  document.getElementById('rsvp-breakdown-tbody').innerHTML = rows.join('') +
+    '<tr style="background:var(--surface-2)"><td><strong>Total</strong></td><td><strong>'+bTotal+'</strong></td><td><strong>'+gTotal+'</strong></td><td><strong>'+(bTotal+gTotal)+'</strong></td></tr>';
+
+  // Hotel summary — list by GROUP NAME (not room number)
+  var groups = buildGroups();
+  var active  = groups.filter(function(g){ return g.status!=='declined'; });
+  var html = active.slice(0,15).map(function(g){
+    var label = g.id.startsWith('rn_') ? 'Room '+g.id.slice(3)+' group' : g.members.map(function(m){return m['Names'];}).join(', ');
+    var assigned = roomAssignments[g.id];
+    var roomBadge = assigned ? '<span class="badge blue">Room '+assigned+'</span>' : '<span class="badge gray">Unassigned</span>';
+    return '<tr><td style="font-size:12px">'+label+'</td><td>'+sideBadge(g.side)+'</td><td>'+g.totalPax+'</td><td>'+roomBadge+'</td></tr>';
+  }).join('') + (active.length>15?'<tr><td colspan="4" style="font-size:12px;color:var(--text-light);padding:8px 14px">+ '+(active.length-15)+' more — see Hotel tab</td></tr>':'');
+  document.getElementById('hotel-summary-tbody').innerHTML = html || '<tr><td colspan="4" style="color:var(--text-light);text-align:center;padding:16px">No groups with accommodation found.</td></tr>';
+}
+
+// ══════════════════════════════════════════════════════
+// GUESTS TABLE
+// ══════════════════════════════════════════════════════
+function setGuestFilter(btn,f){
+  guestFilter=f;
+  document.querySelectorAll('#guest-filter-row .filter-btn').forEach(function(b){ b.classList.remove('on'); });
+  btn.classList.add('on');
+  renderGuestTable();
+}
+function renderGuestTable(){
+  var q=(document.getElementById('g-search')||{value:''}).value.toLowerCase();
+  var list=guests.filter(function(g){
+    var rv=rsvpVal(g);
+    if(guestFilter==='yes')     return rv==='yes';
+    if(guestFilter==='no')      return rv==='no';
+    if(guestFilter==='waiting') return rv==='waiting';
+    if(guestFilter==='hotel')   return (g['Accomodation']||'').toLowerCase()==='yes';
+    if(guestFilter==='pickup')  return (g['Pick up needed']||'').toLowerCase()==='yes';
+    if(guestFilter==='drop')    return (g['Drop needed']||'').toLowerCase()==='yes';
+    if(guestFilter==='bride')   return g['Side']==='Bride';
+    if(guestFilter==='groom')   return g['Side']==='Groom';
+    return true;
+  }).filter(function(g){ return !q||(g['Names']||'').toLowerCase().includes(q); });
+
+  var tbody=document.getElementById('guest-tbody');
+  var empty=document.getElementById('guest-empty');
+  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=list.map(function(g,i){
+    var rn=g['Room Number']?'<span class="badge blue">'+g['Room Number']+'</span>':'—';
+    var hotel=(g['Accomodation']||'').toLowerCase()==='yes'?'<span class="badge blue">Yes</span>':((g['Accomodation']||'').toLowerCase()==='no'?'No':'—');
+    return '<tr>'+
+      '<td style="color:var(--text-light)">'+(i+1)+'</td>'+
+      '<td><strong>'+g['Names']+'</strong></td>'+
+      '<td>'+sideBadge(g['Side'])+'</td>'+
+      '<td>'+rsvpBadge(g['RSVP'])+'</td>'+
+      '<td>'+qty(g)+'</td>'+
+      '<td>'+hotel+'</td>'+
+      '<td>'+rn+'</td>'+
+      '<td>'+yesnoBadge(g['Pick up needed'])+'</td>'+
+      '<td style="font-size:11px;color:var(--text-muted)">'+(g['Arrival Time']||'—')+'</td>'+
+      '<td>'+yesnoBadge(g['Drop needed'])+'</td>'+
+      '<td style="font-size:11px;color:var(--text-muted)">'+(g['Drop Time']||'—')+'</td>'+
+      '<td style="font-size:11px">'+(g['Flight Details']||'—')+'</td>'+
+      '<td style="font-size:11px">'+(g['Train Details']||'—')+'</td>'+
+      '</tr>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// TRANSPORT + AI + FLIGHT TRACKER
+// ══════════════════════════════════════════════════════
+function renderTransportPage(){
+  var needPickup=guests.filter(function(g){ return (g['Pick up needed']||'').toLowerCase()==='yes'; });
+  var needDrop  =guests.filter(function(g){ return (g['Drop needed']||'').toLowerCase()==='yes'; });
+  document.getElementById('transport-pending-msg').textContent = needPickup.length+' guests need pickup · '+needDrop.length+' guests need drop.'+(!aiRuns.length?' Click Auto-organise to plan runs.':'');
+  renderFlightTracker();
+  if(aiRuns.length) renderRunCards();
+}
+
+function renderFlightTracker(){
+  var flightGuests = guests.filter(function(g){
+    return ((g['Pick up needed']||'').toLowerCase()==='yes'||(g['Drop needed']||'').toLowerCase()==='yes') && g['Flight Details'];
+  });
+  var el = document.getElementById('flight-tracker-body');
+  if(!flightGuests.length){
+    el.innerHTML='<p style="font-size:13px;color:var(--text-muted);padding:12px 0">No guests with flight details found. Fill in Flight Details in the guest list.</p>';
+    return;
+  }
+  el.innerHTML = flightGuests.map(function(g){
+    var fd = g['Flight Details'];
+    var st = flightStatuses[fd] || {};
+    var statusHtml;
+    if(st.checking)   statusHtml='<span class="fl-status checking">⏳ Checking…</span>';
+    else if(st.error) statusHtml='<span class="fl-status unknown">— '+st.error+'</span>';
+    else if(st.status==='on-time') statusHtml='<span class="fl-status on-time">✅ On time · '+st.scheduled+'</span>';
+    else if(st.status==='delayed') statusHtml='<span class="fl-status delayed">⚠️ Delayed · Sched '+st.scheduled+' → Est '+st.estimated+'</span>';
+    else statusHtml='<span class="fl-status unknown">Not checked yet</span>';
+    return '<div class="flight-row">'+
+      '<div style="flex:1;min-width:120px"><strong>'+g['Names']+'</strong></div>'+
+      '<div style="font-size:12px;color:var(--text-muted)">'+fd+'</div>'+
+      '<div style="font-size:12px;color:var(--text-muted)">'+(g['Arrival Time']||g['Drop Time']||'')+'</div>'+
+      '<div>'+statusHtml+'</div>'+
+      '</div>';
+  }).join('');
+}
+
+async function checkAllFlights(){
+  if(!AVIATIONSTACK_KEY){
+    var el=document.getElementById('flight-tracker-body');
+    el.innerHTML='<div class="error-banner" style="margin:8px 0">To enable live flight tracking, get a free API key from <a href="https://aviationstack.com" target="_blank" style="color:inherit;font-weight:600">aviationstack.com</a> and paste it into the AVIATIONSTACK_KEY variable at the top of this file.</div>';
+    return;
+  }
+  var flightGuests = guests.filter(function(g){
+    return ((g['Pick up needed']||'').toLowerCase()==='yes'||(g['Drop needed']||'').toLowerCase()==='yes') && g['Flight Details'];
+  });
+  // Mark all as checking
+  flightGuests.forEach(function(g){ flightStatuses[g['Flight Details']] = {checking:true}; });
+  renderFlightTracker();
+  // Extract unique flight numbers
+  var unique = {};
+  flightGuests.forEach(function(g){ var fd=(g['Flight Details']||'').split(' ').slice(0,2).join(''); if(fd) unique[fd]=true; });
+  var flightNums = Object.keys(unique);
+  for(var i=0;i<flightNums.length;i++){
+    await fetchFlightStatus(flightNums[i]);
+  }
+  renderFlightTracker();
+}
+
+async function fetchFlightStatus(flightNum){
+  try {
+    var clean = flightNum.replace(/\s/g,'').toUpperCase();
+    var url = 'https://api.aviationstack.com/v1/flights?access_key='+AVIATIONSTACK_KEY+'&flight_iata='+clean+'&limit=1';
+    var res = await fetch(url);
+    var data = await res.json();
+    if(data && data.data && data.data.length){
+      var f = data.data[0];
+      var sched = f.departure && f.departure.scheduled ? f.departure.scheduled.substr(11,5) : '?';
+      var estim = f.departure && f.departure.estimated ? f.departure.estimated.substr(11,5) : sched;
+      var delayed = f.departure && f.departure.delay && f.departure.delay > 10;
+      flightStatuses[flightNum] = { status: delayed?'delayed':'on-time', scheduled:sched, estimated:estim };
+    } else {
+      flightStatuses[flightNum] = { error:'No data' };
+    }
+  } catch(e){
+    flightStatuses[flightNum] = { error:'Error' };
+  }
+}
+
+async function runAI(){
+  var vehicles  = document.getElementById('ai-vehicles').value.trim() || 'Tempo Traveller (12), Innova (6), Sedan (4)';
+  var driveTime = document.getElementById('ai-drive').value || '45';
+  var resultEl  = document.getElementById('ai-result');
+  var conflictEl= document.getElementById('conflict-list');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = '<div class="thinking">✨ Analysing transport needs<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  conflictEl.innerHTML = '';
+
+  var gd = guests.filter(function(g){
+    return (g['Pick up needed']||'').toLowerCase()==='yes' || (g['Drop needed']||'').toLowerCase()==='yes';
+  }).map(function(g){
+    return {
+      name:         g['Names'],
+      pax:          qty(g),
+      needPickup:   (g['Pick up needed']||'').toLowerCase()==='yes',
+      needDrop:     (g['Drop needed']||'').toLowerCase()==='yes',
+      arrivalTime:  g['Arrival Time']   || '',
+      dropTime:     g['Drop Time']      || '',
+      flightDetails:g['Flight Details'] || '',
+      trainDetails: g['Train Details']  || ''
+    };
+  });
+
+  if (!gd.length) {
+    resultEl.innerHTML = '<span style="color:var(--text-muted)">No guests marked as needing pickup or drop. Update the sheet first.</span>';
+    return;
+  }
+
+  try {
+    var aiText = '';
+    if (API) {
+      // On Netlify — use serverless function (keeps API key secure)
+      var res = await fetch(API + '?action=ai', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ guests: gd, vehicles: vehicles, driveTime: driveTime })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      var data = await res.json();
+      if (data.status === 'error') throw new Error(data.message);
+      aiText = data.text || '';
+    } else {
+      // Local fallback — call Anthropic directly
+      var prompt = 'You are a wedding logistics coordinator. Organise transport for a wedding.\n\n' +
+        'GUESTS NEEDING TRANSPORT:\n' + JSON.stringify(gd, null, 2) + '\n\n' +
+        'VEHICLES: ' + vehicles + '\nDRIVE TIME: ' + driveTime + ' mins\n\n' +
+        'Group arrivals within 45 min into shared pickup runs. Group departures similarly. Fill larger vehicles first.\n' +
+        'Reply ONLY with valid JSON: {"runs":[{"id":"R1","type":"pickup","label":"...","vehicle":"...","capacity":12,"total_pax":8,"guests":["Name1"],"airport_time":"10:30","depart_venue_time":"09:30","notes":""}],"conflicts":[],"summary":"..."}';
+      var aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
+      });
+      var aiData = await aiRes.json();
+      aiText = (aiData.content || []).map(function(c){ return c.text || ''; }).join('');
+    }
+
+    var raw    = (aiText || '').replace(/```json|```/g, '').trim();
+    var parsed = JSON.parse(raw);
+    aiRuns     = parsed.runs || [];
+
+    if (parsed.conflicts && parsed.conflicts.length) {
+      conflictEl.innerHTML = parsed.conflicts.map(function(c){
+        return '<div class="conflict-item">⚠️ ' + c.message + '</div>';
+      }).join('');
+    }
+    resultEl.innerHTML = '<strong style="color:var(--text)">Plan ready:</strong> ' +
+      (parsed.summary || 'Runs organised.');
+    renderRunCards();
+  } catch(e) {
+    resultEl.innerHTML = '<span style="color:#9b1c1c">Could not generate plan: ' + e.message + '</span>';
+  }
+}
+
+function renderRunCards(){
+  var el=document.getElementById('transport-runs');
+  if(!aiRuns.length) return;
+  var pickups=aiRuns.filter(function(r){return r.type==='pickup';});
+  var drops=aiRuns.filter(function(r){return r.type==='drop';});
+  var html='';
+  if(pickups.length){
+    html+='<h3 style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Pickup runs</h3>';
+    html+='<div class="transport-grid">'+pickups.map(runCard).join('')+'</div>';
+  }
+  if(drops.length){
+    html+='<h3 style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 10px">Drop runs</h3>';
+    html+='<div class="transport-grid">'+drops.map(runCard).join('')+'</div>';
+  }
+  el.innerHTML=html;
+}
+
+function runCard(r){
+  var pct=r.capacity?Math.round((r.total_pax||0)/r.capacity*100):0;
+  var bc=r.type==='pickup'?'#f0fdf6':'#fff0f1';
+  var tc=r.type==='pickup'?'#166534':'#9b1c1c';
+  var lc=r.type==='pickup'?'#166534':'#c0392b';
+  return '<div class="run-card" style="border-left:3px solid '+lc+'">'+
+    '<div class="run-header"><div><div class="run-title">'+r.id+' — '+r.label+'</div>'+
+    '<div class="run-meta">'+r.vehicle+(r.total_pax?' · '+r.total_pax+(r.capacity?'/'+r.capacity:'')+ ' pax':'')+'</div></div>'+
+    '<span class="badge" style="background:'+bc+';color:'+tc+'">'+r.type+'</span></div>'+
+    (r.type==='pickup'&&r.depart_venue_time?'<div style="font-size:12px;margin-bottom:3px">Depart venue: <strong>'+r.depart_venue_time+'</strong></div>':'')+
+    '<div style="font-size:12px;color:var(--text-muted)">At pick-up point: <strong style="color:var(--text)">'+r.airport_time+'</strong></div>'+
+    (r.notes?'<div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.5">'+r.notes+'</div>':'')+
+    '<div class="guest-chips">'+((r.guests||[]).map(function(g){return'<span class="chip">'+g+'</span>';})).join('')+'</div>'+
+    (r.capacity?'<div style="margin-top:8px;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(pct>90?'#f59e0b':'#34d399')+';border-radius:99px"></div></div>':'')+
+    '</div>';
+}
+
+// ══════════════════════════════════════════════════════
+// HOTEL v3 — individual rooms, floor config
+// ══════════════════════════════════════════════════════
+
+// Parse a room-number string like "102, 104, 107, 201-205, 301"
+function parseRoomNumbers(str){
+  var nums = [];
+  var parts = (str||'').split(',');
+  parts.forEach(function(p){
+    p = p.trim();
+    var range = p.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+    if(range){
+      var from=parseInt(range[1]), to=parseInt(range[2]);
+      for(var n=from;n<=to;n++) nums.push(n);
+    } else {
+      var n=parseInt(p);
+      if(!isNaN(n)) nums.push(n);
+    }
+  });
+  // deduplicate and sort
+  var seen={};
+  return nums.filter(function(n){ if(seen[n]) return false; seen[n]=true; return true; }).sort(function(a,b){return a-b;});
+}
+
+function roomsToString(arr){
+  if(!arr||!arr.length) return '';
+  return arr.join(', ');
+}
+
+// Build groups from sheet data
+function buildGroups(){
+  var grouped = {};
+  guests.forEach(function(g){
+    var rn = (g['Room Number']||'').trim();
+    var ac = (g['Accomodation']||'').toLowerCase();
+    if(ac!=='yes' && !rn) return;
+    var key = rn ? 'rn_'+rn : 'solo_'+g['Names'];
+    if(!grouped[key]) grouped[key]=[];
+    grouped[key].push(g);
+  });
+  return Object.keys(grouped).map(function(id){
+    var members=grouped[id];
+    var totalPax=members.reduce(function(a,g){return a+qty(g);},0);
+    var sides=[...new Set(members.map(function(g){return g['Side'];}))];
+    var side=sides.length===1?sides[0]:'Mixed';
+    var rsvps=members.map(function(g){return rsvpVal(g);});
+    var allNo=rsvps.every(function(r){return r==='no';});
+    var anyWait=rsvps.some(function(r){return r==='waiting';});
+    var anyYes=rsvps.some(function(r){return r==='yes';});
+    var status=allNo?'declined':anyWait&&!anyYes?'waiting':anyWait?'partial':'confirmed';
+    return {id:id,members:members,totalPax:totalPax,side:side,status:status};
+  }).sort(function(a,b){
+    if(a.side<b.side) return -1;
+    if(a.side>b.side) return 1;
+    return a.id<b.id?-1:1;
+  });
+}
+
+function renderHotelPage(){
+  var groups=buildGroups();
+  renderHotelStats(groups);
+  renderFloorBuilder();
+  renderGroupList(groups);
+  renderFloorMap(groups);
+}
+
+function renderHotelStats(groups){
+  var active=groups.filter(function(g){return g.status!=='declined';});
+  var assigned=active.filter(function(g){return roomAssignments[g.id];});
+  var totalPax=active.reduce(function(a,g){return a+g.totalPax;},0);
+  var assignedPax=assigned.reduce(function(a,g){return a+g.totalPax;},0);
+  var unassignedPax=totalPax-assignedPax;
+  var totalRooms=floors.reduce(function(a,fl){return a+fl.rooms.length;},0);
+  var usedRooms=Object.keys(roomAssignments).length;
+
+  document.getElementById('hotel-stats').innerHTML=
+    '<div class="hsb"><div class="hsb-val">'+totalPax+'</div><div class="hsb-lbl">Total pax needing rooms</div></div>'+
+    '<div class="hsb"><div class="hsb-val">'+active.length+'</div><div class="hsb-lbl">Total groups</div></div>'+
+    '<div class="hsb"><div class="hsb-val" style="color:#166534">'+assignedPax+'</div><div class="hsb-lbl">Pax assigned</div></div>'+
+    '<div class="hsb"><div class="hsb-val" style="color:#92400e">'+unassignedPax+'</div><div class="hsb-lbl">Pax unassigned</div></div>'+
+    '<div class="hsb"><div class="hsb-val">'+usedRooms+'/'+totalRooms+'</div><div class="hsb-lbl">Rooms used</div></div>';
+}
+
+function renderFloorBuilder(){
+  var container=document.getElementById('floor-rows');
+  container.innerHTML=floors.map(function(fl,idx){
+    return '<div class="floor-row" id="flrow-'+fl.id+'">'+
+      '<input type="text" class="fl-name" value="'+fl.label+'" placeholder="Floor name" onchange="updateFloorLabel('+idx+',this.value)">'+
+      '<div style="flex:2;min-width:200px">'+
+        '<input type="text" class="fl-rooms-input" value="'+roomsToString(fl.rooms)+'" placeholder="e.g. 102, 104, 201-205, 301" onchange="updateFloorRooms('+idx+',this.value)">'+
+        '<div class="fl-rooms-hint">'+fl.rooms.length+' rooms configured</div>'+
+      '</div>'+
+      '<select class="fl-side-sel" onchange="updateFloorSide('+idx+',this.value)">'+
+        '<option value="bride"'+(fl.side==='bride'?' selected':'')+'>💗 Bride</option>'+
+        '<option value="groom"'+(fl.side==='groom'?' selected':'')+'>💙 Groom</option>'+
+        '<option value="mixed"'+(fl.side==='mixed'?' selected':'')+'>🤝 Mixed</option>'+
+      '</select>'+
+      (floors.length>1?'<button class="fl-remove" onclick="removeFloor('+idx+')">✕</button>':'')+
+    '</div>';
+  }).join('');
+}
+
+function updateFloorLabel(idx,val){ if(floors[idx]) floors[idx].label=val; savePersist(); }
+function updateFloorRooms(idx,val){
+  if(!floors[idx]) return;
+  floors[idx].rooms = parseRoomNumbers(val);
+  renderHotelPage();
+  savePersist();
+}
+function updateFloorSide(idx,val){
+  if(!floors[idx]) return;
+  floors[idx].side=val;
+  renderHotelPage();
+  savePersist();
+}
+function addFloor(){
+  var newId=Date.now();
+  floors.push({id:newId,label:'Floor '+(floors.length+1),side:'mixed',rooms:[]});
+  renderHotelPage();
+  savePersist();
+}
+function removeFloor(idx){
+  if(floors.length<=1) return;
+  var fl=floors[idx];
+  fl.rooms.forEach(function(rn){
+    Object.keys(roomAssignments).forEach(function(gid){
+      if(roomAssignments[gid]===rn) delete roomAssignments[gid];
+    });
+  });
+  floors.splice(idx,1);
+  renderHotelPage();
+  savePersist();
+}
+function resetAllRooms(){
+  if(!confirm('Reset all room assignments?')) return;
+  roomAssignments={};
+  savePersist();
+  renderHotelPage();
+}
+
+var hotelGroupFilter='all';
+function setHotelFilter(btn,f){
+  hotelGroupFilter=f;
+  document.querySelectorAll('#hotel-filter-row .filter-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  renderGroupList(buildGroups());
+}
+
+function renderGroupList(groups){
+  var filtered=groups.filter(function(g){
+    if(hotelGroupFilter==='unassigned') return !roomAssignments[g.id] && g.status!=='declined';
+    if(hotelGroupFilter==='bride')      return g.side==='Bride';
+    if(hotelGroupFilter==='groom')      return g.side==='Groom';
+    if(hotelGroupFilter==='confirmed')  return g.status==='confirmed';
+    return true;
+  });
+
+  var container=document.getElementById('group-list');
+  if(!filtered.length){
+    container.innerHTML='<div class="empty-state" style="padding:20px"><div class="icon">🏨</div>No groups match this filter.</div>';
+    return;
+  }
+
+  // Build all available room numbers across floors
+  function roomOpts(groupId){
+    var assigned=roomAssignments[groupId]||0;
+    if(!floors.some(function(f){return f.rooms.length;})){
+      return '<option value="">— Enter room numbers in Floor setup above —</option>';
+    }
+    var opts='<option value="">— Assign room —</option>';
+    floors.forEach(function(fl){
+      if(!fl.rooms.length) return;
+      opts+='<optgroup label="'+fl.label+' ('+fl.rooms.length+' rooms)">';
+      fl.rooms.forEach(function(rnum){
+        var taken=false;
+        Object.keys(roomAssignments).forEach(function(gid){
+          if(roomAssignments[gid]===rnum && gid!==groupId) taken=true;
+        });
+        if(!taken) opts+='<option value="'+rnum+'"'+(assigned===rnum?' selected':'')+'>'+rnum+'</option>';
+      });
+      opts+='</optgroup>';
+    });
+    return opts;
+  }
+
+  container.innerHTML=filtered.map(function(g,i){
+    var names=g.members.map(function(m){return m['Names'];}).join(', ');
+    var rsvpSummary=g.members.map(function(m){
+      var r=rsvpVal(m);
+      var fn=m['Names'].split(' ')[0];
+      return r==='yes'?'<span style="color:#166534">'+fn+'</span>':
+             r==='no' ?'<span style="color:#9b1c1c;text-decoration:line-through">'+fn+'</span>':
+             '<span style="color:#92400e">'+fn+'?</span>';
+    }).join(', ');
+    var sc_=g.side==='Bride'?'#e8728a':g.side==='Groom'?'#2563eb':'#7c3aed';
+    var assigned=roomAssignments[g.id];
+    var rowClass='group-row'+(g.status==='declined'?' declined':'');
+    var label=g.id.startsWith('rn_')?'Room '+g.id.slice(3)+' group':names;
+    return '<div class="'+rowClass+'" data-idx="'+i+'">'+
+      '<div class="gr-names"><strong>'+label+'</strong><span>'+rsvpSummary+'</span></div>'+
+      '<span class="badge" style="background:'+(g.side==='Bride'?'#fdf0f3':g.side==='Groom'?'#eff6ff':'#f5f3ff')+';color:'+sc_+'">'+g.side+'</span>'+
+      '<span class="gr-pax">'+g.totalPax+' pax</span>'+
+      (g.status!=='declined'
+        ?'<select class="gr-sel" data-gid="'+encodeURIComponent(g.id)+'">'+roomOpts(g.id)+'</select>'+(assigned?'<span class="gr-assigned">→ Rm '+assigned+'</span>':'')
+        :'<span class="badge red">All declined</span>')+
+    '</div>';
+  }).join('');
+
+  container.querySelectorAll('select.gr-sel').forEach(function(sel){
+    sel.addEventListener('change',function(){
+      var gid=decodeURIComponent(sel.getAttribute('data-gid'));
+      var val=parseInt(sel.value);
+      if(!sel.value) delete roomAssignments[gid];
+      else roomAssignments[gid]=val;
+      savePersist();
+      renderHotelPage();
+    });
+  });
+}
+
+function renderFloorMap(groups){
+  // Build room->group lookup
+  var r2g={};
+  Object.keys(roomAssignments).forEach(function(gid){
+    var grp=groups.find(function(g){return g.id===gid;});
+    if(grp) r2g[roomAssignments[gid]]=grp;
+  });
+
+  var mapEl=document.getElementById('floor-map');
+  if(!floors.some(function(f){return f.rooms.length;})){
+    mapEl.innerHTML='<div class="empty-state" style="padding:24px"><div class="icon">🏨</div>Enter room numbers in the Floor setup above to see the map.</div>';
+    return;
+  }
+
+  var html='';
+  floors.forEach(function(fl){
+    if(!fl.rooms.length) return;
+    var sideIcon=fl.side==='bride'?'💗':fl.side==='groom'?'💙':'🤝';
+    var usedCount=fl.rooms.filter(function(rn){return r2g[rn];}).length;
+    html+='<div class="floor-map-section">'+
+      '<h4>'+sideIcon+' '+fl.label+' <span>('+usedCount+'/'+fl.rooms.length+' occupied)</span></h4>'+
+      '<div class="room-grid-v3">'+
+      fl.rooms.map(function(rnum){
+        var grp=r2g[rnum];
+        if(grp){
+          var sc_=grp.side==='Bride'?'occ-bride':grp.side==='Groom'?'occ-groom':'occ-mixed';
+          var firstName=grp.members[0]['Names'].split(' ')[0];
+          var allNames=grp.members.map(function(m){return m['Names'];}).join(', ');
+          var paxLabel=grp.members.length>1?grp.members.length+' pax':'';
+          return '<div class="rt3 '+sc_+'" data-rnum="'+rnum+'" data-action="unassign" title="'+allNames+' — click to unassign">'+
+            '<div class="rt3-num">'+rnum+'</div>'+
+            '<div class="rt3-name">'+firstName+(grp.members.length>1?'+':'')+'</div>'+
+            (paxLabel?'<div class="rt3-sub">'+paxLabel+'</div>':'')+
+            '</div>';
+        } else {
+          var freeClass='free-'+fl.side;
+          return '<div class="rt3 '+freeClass+'" data-rnum="'+rnum+'" data-floor-id="'+fl.id+'" data-action="assign" title="Room '+rnum+' — click to assign">'+
+            '<div class="rt3-num">'+rnum+'</div>'+
+            '<div class="rt3-sub" style="font-size:9px;color:var(--text-light)">assign</div>'+
+            '</div>';
+        }
+      }).join('')+
+      '</div></div>';
+  });
+  mapEl.innerHTML=html;
+
+  // Event delegation
+  mapEl.addEventListener('click',function(e){
+    var tile=e.target.closest('[data-action]');
+    if(!tile) return;
+    var rnum=parseInt(tile.getAttribute('data-rnum'));
+    var action=tile.getAttribute('data-action');
+    if(action==='unassign'){
+      var entry=Object.entries(roomAssignments).find(function(kv){return kv[1]===rnum;});
+      if(entry){ delete roomAssignments[entry[0]]; savePersist(); renderHotelPage(); }
+    } else if(action==='assign'){
+      openPicker(rnum,e);
+    }
+  });
+}
+
+// Picker
+function openPicker(rnum,e){
+  pickerTargetRoom=rnum;
+  var groups=buildGroups();
+  var unassigned=groups.filter(function(g){return g.status!=='declined'&&!roomAssignments[g.id];});
+  document.getElementById('picker-room-label').textContent='#'+rnum;
+  var sel=document.getElementById('picker-group-sel');
+  sel.innerHTML='<option value="">— select group —</option>'+
+    unassigned.map(function(g){
+      var names=g.members.map(function(m){return m['Names'];}).join(', ');
+      return '<option value="'+encodeURIComponent(g.id)+'">'+g.side+' · '+names+' ('+g.totalPax+' pax)</option>';
+    }).join('');
+  var picker=document.getElementById('room-picker');
+  picker.style.display='block';
+  var x=Math.min(e.clientX,window.innerWidth-340);
+  var y=Math.min(e.clientY+10,window.innerHeight-160);
+  picker.style.left=x+'px';
+  picker.style.top=y+'px';
+}
+function confirmPick(){
+  var gid=decodeURIComponent(document.getElementById('picker-group-sel').value);
+  if(!gid||!pickerTargetRoom){ closePicker(); return; }
+  roomAssignments[gid]=pickerTargetRoom;
+  savePersist();
+  closePicker();
+  renderHotelPage();
+}
+function closePicker(){
+  document.getElementById('room-picker').style.display='none';
+  pickerTargetRoom=null;
+}
+document.addEventListener('click',function(e){
+  var p=document.getElementById('room-picker');
+  if(p&&p.style.display!=='none'&&!p.contains(e.target)&&!e.target.closest('[data-action="assign"]')) closePicker();
+});
+
+// ══════════════════════════════════════════════════════
+// CHECKLIST
+// ══════════════════════════════════════════════════════
+function renderChecklist(){
+  var done=tasks.filter(function(t){return t.done;}).length;
+  var total=tasks.length;
+  var pct=total?Math.round(done/total*100):0;
+  document.getElementById('progress-label').textContent=done+' of '+total+' tasks complete ('+pct+'%)';
+  document.getElementById('progress-bar').style.width=pct+'%';
+  var cats=[...new Set(tasks.map(function(t){return t.cat;}))];
+  document.getElementById('checklist-items').innerHTML=cats.map(function(cat){
+    var items=tasks.filter(function(t){return t.cat===cat;});
+    return '<div style="margin-bottom:4px">'+
+      '<div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:12px 0 4px">'+cat+'</div>'+
+      items.map(function(t){
+        return '<div class="checklist-item'+(t.done?' done':'')+'">'+
+          '<input type="checkbox"'+(t.done?' checked':'')+' onchange="toggleTask('+t.id+')">'+
+          '<span class="task-text">'+t.text+'</span>'+
+          '<button onclick="removeTask('+t.id+')" style="font-size:11px;border:1px solid var(--border);background:transparent;border-radius:5px;padding:2px 8px;cursor:pointer;color:var(--text-muted)">✕</button>'+
+        '</div>';
+      }).join('')+'</div>';
+  }).join('');
+}
+function toggleTask(id){ var t=tasks.find(function(x){return x.id===id;}); if(t){t.done=!t.done;savePersist();renderChecklist();} }
+function removeTask(id){ tasks=tasks.filter(function(t){return t.id!==id;}); savePersist(); renderChecklist(); }
+function addTask(){
+  var txt=document.getElementById('task-input').value.trim();
+  if(!txt) return;
+  tasks.push({id:taskId++,text:txt,cat:document.getElementById('task-cat').value,done:false});
+  document.getElementById('task-input').value='';
+  savePersist(); renderChecklist();
+}
+
+// ══════════════════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════════════════
+function exportCSV(){
+  var rows=[['Name','Side','RSVP','Quantity','Accommodation','Room Number','Pickup Needed','Arrival Time','Drop Needed','Drop Time','Flight Details','Train Details']];
+  guests.forEach(function(g){
+    rows.push([g['Names'],g['Side'],g['RSVP'],g['Quantity'],g['Accomodation'],g['Room Number'],g['Pick up needed'],g['Arrival Time'],g['Drop needed'],g['Drop Time'],g['Flight Details'],g['Train Details']]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='wedding-guests.csv';
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════
+// GUEST UPDATE FORM (family members)
+// ══════════════════════════════════════════════════════
+function searchGuest(){
+  var q = document.getElementById('uf-search').value.trim().toLowerCase();
+  var matchEl = document.getElementById('uf-matches');
+  var formEl  = document.getElementById('uf-form');
+  if (q.length < 2) { matchEl.innerHTML=''; formEl.style.display='none'; ufSelectedGuest=null; return; }
+  var matches = guests.filter(function(g){ return (g['Names']||'').toLowerCase().includes(q); }).slice(0,8);
+  if (!matches.length) {
+    matchEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">No match found. Try a different spelling.</p>';
+    formEl.style.display = 'none';
+    return;
+  }
+  matchEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' +
+    matches.map(function(g,i){
+      return '<button style="text-align:left;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:13px" onclick="selectGuest('+i+',this)">' +
+        '<strong>'+g['Names']+'</strong> <span style="color:var(--text-muted);font-size:12px">· '+g['Side']+' side · '+rsvpBadge(g['RSVP'])+'</span></button>';
+    }).join('') + '</div>';
+  matchEl._matches = matches;
+  formEl.style.display = 'none';
+  ufSelectedGuest = null;
+}
+
+function selectGuest(idx, btn){
+  var matchEl = document.getElementById('uf-matches');
+  var matches = matchEl._matches || [];
+  ufSelectedGuest = matches[idx];
+  if (!ufSelectedGuest) return;
+
+  // Highlight selected
+  matchEl.querySelectorAll('button').forEach(function(b){
+    b.style.borderColor = 'var(--border-strong)';
+    b.style.background  = 'var(--surface)';
+  });
+  btn.style.borderColor = 'var(--purple)';
+  btn.style.background  = 'var(--purple-light)';
+
+  var g = ufSelectedGuest;
+
+  // Set a <select> by value, case-insensitive fallback
+  function setSelect(id, val){
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    var v = (val||'').trim();
+    for (var i=0; i<sel.options.length; i++){
+      if (sel.options[i].value === v){ sel.selectedIndex=i; return; }
+    }
+    var vl = v.toLowerCase();
+    for (var j=0; j<sel.options.length; j++){
+      if (sel.options[j].value.toLowerCase() === vl){ sel.selectedIndex=j; return; }
+    }
+    sel.selectedIndex = 0;
+  }
+
+  setSelect('uf-rsvp',   g['RSVP']);
+  setSelect('uf-pickup', g['Pick up needed']);
+  setSelect('uf-drop',   g['Drop needed']);
+  setSelect('uf-accom',  (g['Accomodation']||'').toLowerCase()==='yes' ? 'Yes' : 'No');
+
+  document.getElementById('uf-qty').value      = g['Quantity']       || '1';
+  document.getElementById('uf-arrtime').value  = g['Arrival Time']   || '';
+  document.getElementById('uf-flight').value   = g['Flight Details'] || '';
+  document.getElementById('uf-train').value    = g['Train Details']  || '';
+  document.getElementById('uf-droptime').value = g['Drop Time']      || '';
+
+  document.getElementById('uf-form').style.display    = 'block';
+  document.getElementById('uf-success').style.display = 'none';
+  document.getElementById('uf-submit').style.display  = 'block';
+  document.getElementById('uf-submit').disabled       = false;
+  document.getElementById('uf-submit').textContent    = 'Save my details →';
+}
+
+async function submitUpdate(){
+  if (!ufSelectedGuest){ alert('Please select your name first.'); return; }
+
+  var submitBtn = document.getElementById('uf-submit');
+  var successEl = document.getElementById('uf-success');
+  submitBtn.textContent = 'Saving…';
+  submitBtn.disabled = true;
+
+  var fields = {
+    Names:            ufSelectedGuest['Names'],
+    Side:             ufSelectedGuest['Side'],
+    RSVP:             document.getElementById('uf-rsvp').value,
+    Quantity:         document.getElementById('uf-qty').value,
+    'Pick up needed': document.getElementById('uf-pickup').value,
+    'Arrival Time':   document.getElementById('uf-arrtime').value,
+    'Flight Details': document.getElementById('uf-flight').value,
+    'Train Details':  document.getElementById('uf-train').value,
+    'Drop needed':    document.getElementById('uf-drop').value,
+    'Drop Time':      document.getElementById('uf-droptime').value,
+    Accomodation:     document.getElementById('uf-accom').value,
+  };
+
+  // Update local copy immediately
+  var idx = guests.findIndex(function(g){
+    return g['Names'] === ufSelectedGuest['Names'] && g['Side'] === ufSelectedGuest['Side'];
+  });
+  if (idx >= 0) Object.assign(guests[idx], fields);
+
+  var saved = false;
+  // Try Netlify API first
+  if (API) {
+    try {
+      var res = await fetch(API + '?action=update', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(fields)
+      });
+      var data = await res.json();
+      if (data.status === 'error') throw new Error(data.message);
+      saved = true;
+    } catch(e) { console.warn('Netlify update failed:', e); }
+  }
+  if (saved) {
+    successEl.innerHTML = '<h3>✅ Details saved!</h3><p>Your details have been updated in the sheet.</p>';
+  } else {
+    successEl.innerHTML =
+      '<h3>⚠️ Saved locally</h3>' +
+      '<p>Changes saved on this device. Sheet update requires the Netlify deployment — contact the team if this persists.</p>';
+  }
+
+  successEl.style.display = 'block';
+  submitBtn.style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════
+loadPersist();
+
+// ══════════════════════════════════════════════════════
+// EMBEDDED DATA SNAPSHOT
+// ══════════════════════════════════════════════════════
+var EMBEDDED_DATA = [
+  {Names:'Shreyas',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'1','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Salika',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'2','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sunil Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'3','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Kalpana Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'3','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sankalp Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'4','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Divya Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'4','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Madhu Lohiya',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'5','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Ramesh Lohiya',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'5','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Divya Brother',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'6','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Divya Brother Wife',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'6','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vimla Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Seema Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'7','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Manmohan Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'7','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Priyanka Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'8','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Simran Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'8','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Komal Chopra',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'8','Pick up needed':'Maybe','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Valchand Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'9','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Millie Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'10','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Dipesh Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'10','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Mille Mamisa Parents',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'Yes','Room Number':'11','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Yash Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'12','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nidhi Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'12','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pravina Bhandari',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'13','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Mahindra Bhandari',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'13','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vineet Bhandari',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'14','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nikita Bhandari',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'14','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nyra Bhandari',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'15','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Avyaan Bhandari',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'15','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nanny',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'15','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sweta Bhandari',Side:'Bride',RSVP:'No',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Raunak Bhandari',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'16','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Anaika Bhandari',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'16','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sheetal Chopra',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'17','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pooja Chopra',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'17','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pratibha Chopda',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'18','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vijay Chopda',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'18','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Veer Chopda',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'19','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vihaan Chopda',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'19','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Neelam Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'20','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Subhash Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'20','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sonam Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'21','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Darpan Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'21','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sneh Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'22','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pranjal Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'22','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nivaan Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'22','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sushma Bafna',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'23','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Chakravarti Bafna',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'23','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Deepali Koka',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'24','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pankaj Koka',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'24','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Niharika Koka',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'24','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Kushal Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'25','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Yogita Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'25','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Arnav Sancheti',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'26','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Siddh Sancheti',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'26','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Rishi Sancheti',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'26','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sheela Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'27','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Bhagwandas Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'27','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Tejal Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'29','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Hemant Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'29','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Aparna Jain',Side:'Bride',RSVP:'Waiting',Quantity:'2',Accomodation:'Yes','Room Number':'34','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Aparna Jain Kids',Side:'Bride',RSVP:'Waiting',Quantity:'3',Accomodation:'Yes','Room Number':'35','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pinky Mishra',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'36','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Raj Mishra',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'36','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Ikya - yes',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'38','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Marina',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'Yes','Room Number':'39','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Radhika Chaudhary',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'Yes','Room Number':'37','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vimla Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Wellknown Group',Side:'Bride',RSVP:'Yes',Quantity:'4',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Priya Ramesh',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Rajvi Shah',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Khushie Bhulla',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Aadit Kenia',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Amitosh Sablok',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Adarsh',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Isha',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Deesha Malik',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Tuli',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Anson Alappat',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vinay',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Anand Williams',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Dhriti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Aryan Choudhary',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Gaurav',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Garima',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Geetu',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Rajan',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Meenal',Side:'Bride',RSVP:'No',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Preeti Sancheti',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Preeti Sancheti Boyfriend Shrikant',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Surender Mehta',Side:'Bride',RSVP:'Waiting',Quantity:'3',Accomodation:'No','Room Number':'30','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Dubai Family',Side:'Bride',RSVP:'Waiting',Quantity:'3',Accomodation:'','Room Number':'31','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Subash Mamasa',Side:'Bride',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'32','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Yashwant Mamasa',Side:'Bride',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'33','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Raghunath Mamasa',Side:'Bride',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vinod Jain',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Neelam Shrimal',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nalin Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Deepika Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Dishant Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Kajol Mehta',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Pratab + Pradeep',Side:'Bride',RSVP:'Yes',Quantity:'4',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Walter Dsouza',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Diana Dsouza',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Dylan Dsouza',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Puneet Jain',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Abhishek Jain',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Mahindra Mamasa',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Amit Jain',Side:'Bride',RSVP:'Yes',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Omkar',Side:'Bride',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Tej Pikle',Side:'Bride',RSVP:'Yes',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Mummy and Daddy',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'Yes','Room Number':'Suite','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Shwetha and Raja',Side:'Groom',RSVP:'Waiting',Quantity:'4',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Lalitha aunty',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Suchi family',Side:'Groom',RSVP:'Waiting',Quantity:'3',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sita aunty family',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sabaa family',Side:'Groom',RSVP:'Waiting',Quantity:'4',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Gullu family',Side:'Groom',RSVP:'Waiting',Quantity:'4',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Krishnan mama',Side:'Groom',RSVP:'Waiting',Quantity:'4',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Latha mami (Rani mom)',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Dilip',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Raj S',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nandu',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Sundar',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nalini',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nimmi',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Prasanna',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Amama',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'Yes','Room Number':'','Pick up needed':'Yes','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Bindu',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Meena',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Ganga',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Kalpana',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Kumuda',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vanaja',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vijaya',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'','Room Number':'','Pick up needed':'','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Yash Bhandari',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Rhea Tanna',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Varun Kapadia',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Ahmed Kolsawala',Side:'Groom',RSVP:'Waiting',Quantity:'1',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Nishant Neerav',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Harsh Desai',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Manish Agarwal',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Vinayak Agarwal',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+  {Names:'Utpal Oza',Side:'Groom',RSVP:'Waiting',Quantity:'2',Accomodation:'No','Room Number':'','Pick up needed':'No','Arrival Time':'','Drop needed':'No','Drop Time':'','Flight Details':'','Train Details':''},
+];
+
+loadSheet();
+</script>
+</body>
+</html>
