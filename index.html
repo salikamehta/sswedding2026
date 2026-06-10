@@ -408,6 +408,7 @@ tr:hover td{background:#faf8ff}
       <button onclick="showDash('transport')">Transport</button>
       <button onclick="showDash('hotel')">Hotel</button>
       <button onclick="showDash('checklist')">Checklist</button>
+      <button onclick="showDash('settings')">⚙️ Settings</button>
     </nav>
     <div class="hdr-btns">
       <button class="hdr-btn" onclick="loadSheet()">↻ Refresh</button>
@@ -576,6 +577,28 @@ tr:hover td{background:#faf8ff}
   <div class="picker-btns">
     <button class="picker-confirm" onclick="confirmPick()">Assign</button>
     <button class="picker-cancel" onclick="closePicker()">Cancel</button>
+
+
+    <!-- SETTINGS -->
+    <div id="dash-settings" class="dash-section">
+      <div class="section-header"><h2>Settings</h2></div>
+      <div class="table-wrap" style="padding:24px;max-width:500px">
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">Anthropic API key</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+          Used only for the AI transport planner. Stored in your browser only — never sent anywhere except directly to Anthropic.
+          Get a key at <a href="https://console.anthropic.com" target="_blank" style="color:var(--pink)">console.anthropic.com</a>.
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="password" id="settings-api-key" placeholder="sk-ant-api03-..." 
+            style="flex:1;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;outline:none;font-family:monospace">
+          <button class="btn-pink" onclick="saveApiKey()">Save</button>
+        </div>
+        <div id="settings-key-status" style="font-size:12px;color:var(--text-muted)"></div>
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
+          <button class="btn-outline" onclick="clearApiKey()" style="font-size:12px;color:#9b1c1c;border-color:#fca5a5">Clear saved key</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -728,7 +751,7 @@ function showDash(tab) {
   document.querySelectorAll('.dash-section').forEach(function(s){ s.classList.remove('active'); });
   document.querySelectorAll('.dash-nav button').forEach(function(b){ b.classList.remove('active'); });
   document.getElementById('dash-'+tab).classList.add('active');
-  var tabs = ['overview','guests','transport','hotel','checklist'];
+  var tabs = ['overview','guests','transport','hotel','checklist','settings'];
   var idx = tabs.indexOf(tab);
   if (idx>=0) document.querySelectorAll('.dash-nav button')[idx].classList.add('active');
   if (tab==='overview')  renderOverview();
@@ -736,6 +759,7 @@ function showDash(tab) {
   if (tab==='transport') renderTransportPage();
   if (tab==='hotel')     renderHotelPage();
   if (tab==='checklist') renderChecklist();
+  if (tab==='settings')  renderSettings();
 }
 
 // ══════════════════════════════════════════════════════
@@ -956,6 +980,15 @@ async function runAI(){
   resultEl.innerHTML = '<div class="thinking">✨ Analysing transport needs<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
   conflictEl.innerHTML = '';
 
+  // Get API key from localStorage
+  var apiKey = localStorage.getItem('anthropic_key') || '';
+  if (!apiKey) {
+    resultEl.innerHTML = '<div style="background:#fff8f0;border:1px solid #f5c0cb;border-radius:8px;padding:16px;font-size:13px">' +
+      '<strong>API key needed</strong><br>Enter your Anthropic API key in the ' +
+      '<button onclick="showDash(\'settings\')" style="background:var(--pink);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:12px">Settings</button> tab to use the AI planner.</div>';
+    return;
+  }
+
   var gd = guests.filter(function(g){
     return (g['Pick up needed']||'').toLowerCase()==='yes' || (g['Drop needed']||'').toLowerCase()==='yes';
   }).map(function(g){
@@ -976,36 +1009,45 @@ async function runAI(){
     return;
   }
 
+  var prompt = 'You are a wedding logistics coordinator. Organise transport for a wedding.\n\n' +
+    'GUESTS NEEDING TRANSPORT:\n' + JSON.stringify(gd, null, 2) + '\n\n' +
+    'VEHICLES: ' + vehicles + '\nDRIVE TIME to venue: ' + driveTime + ' mins\n\n' +
+    'RULES:\n' +
+    '1. Group arrivals within 45 min of each other into shared pickup runs\n' +
+    '2. Group departures within 45 min of each other into shared drop runs\n' +
+    '3. Fill larger vehicles first\n' +
+    '4. Pickup depart_venue_time = arrival_time minus drive_time minus 15 min buffer\n' +
+    '5. Flag if same vehicle needed for pickup and drop with under 30 min turnaround\n' +
+    '6. If times are missing, group by flight/train and mark times TBC\n\n' +
+    'Reply ONLY with valid JSON, no markdown:\n' +
+    '{"runs":[{"id":"R1","type":"pickup","label":"Morning arrivals","vehicle":"Tempo Traveller",' +
+    '"capacity":12,"total_pax":8,"guests":["Name1","Name2"],"airport_time":"10:30",' +
+    '"depart_venue_time":"09:30","notes":"note"}],' +
+    '"conflicts":[{"message":"..."}],"summary":"One paragraph"}';
+
   try {
-    var aiText = '';
-    if (API) {
-      // On Netlify — use serverless function (keeps API key secure)
-      var res = await fetch(API + '?action=ai', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ guests: gd, vehicles: vehicles, driveTime: driveTime })
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var data = await res.json();
-      if (data.status === 'error') throw new Error(data.message);
-      aiText = data.text || '';
-    } else {
-      // Local fallback — call Anthropic directly
-      var prompt = 'You are a wedding logistics coordinator. Organise transport for a wedding.\n\n' +
-        'GUESTS NEEDING TRANSPORT:\n' + JSON.stringify(gd, null, 2) + '\n\n' +
-        'VEHICLES: ' + vehicles + '\nDRIVE TIME: ' + driveTime + ' mins\n\n' +
-        'Group arrivals within 45 min into shared pickup runs. Group departures similarly. Fill larger vehicles first.\n' +
-        'Reply ONLY with valid JSON: {"runs":[{"id":"R1","type":"pickup","label":"...","vehicle":"...","capacity":12,"total_pax":8,"guests":["Name1"],"airport_time":"10:30","depart_venue_time":"09:30","notes":""}],"conflicts":[],"summary":"..."}';
-      var aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] })
-      });
-      var aiData = await aiRes.json();
-      aiText = (aiData.content || []).map(function(c){ return c.text || ''; }).join('');
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':      'application/json',
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-request-header': 'true'
+      },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages:   [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      var errData = await res.json();
+      throw new Error((errData.error && errData.error.message) || ('HTTP ' + res.status));
     }
 
-    var raw    = (aiText || '').replace(/```json|```/g, '').trim();
+    var data   = await res.json();
+    var raw    = (data.content || []).map(function(c){ return c.text || ''; }).join('').replace(/```json|```/g,'').trim();
     var parsed = JSON.parse(raw);
     aiRuns     = parsed.runs || [];
 
@@ -1014,485 +1056,13 @@ async function runAI(){
         return '<div class="conflict-item">⚠️ ' + c.message + '</div>';
       }).join('');
     }
-    resultEl.innerHTML = '<strong style="color:var(--text)">Plan ready:</strong> ' +
-      (parsed.summary || 'Runs organised.');
+    resultEl.innerHTML = '<strong style="color:var(--text)">Plan ready:</strong> ' + (parsed.summary || 'Runs organised.');
     renderRunCards();
   } catch(e) {
     resultEl.innerHTML = '<span style="color:#9b1c1c">Could not generate plan: ' + e.message + '</span>';
   }
 }
 
-function renderRunCards(){
-  var el=document.getElementById('transport-runs');
-  if(!aiRuns.length) return;
-  var pickups=aiRuns.filter(function(r){return r.type==='pickup';});
-  var drops=aiRuns.filter(function(r){return r.type==='drop';});
-  var html='';
-  if(pickups.length){
-    html+='<h3 style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px">Pickup runs</h3>';
-    html+='<div class="transport-grid">'+pickups.map(runCard).join('')+'</div>';
-  }
-  if(drops.length){
-    html+='<h3 style="font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin:18px 0 10px">Drop runs</h3>';
-    html+='<div class="transport-grid">'+drops.map(runCard).join('')+'</div>';
-  }
-  el.innerHTML=html;
-}
-
-function runCard(r){
-  var pct=r.capacity?Math.round((r.total_pax||0)/r.capacity*100):0;
-  var bc=r.type==='pickup'?'#f0fdf6':'#fff0f1';
-  var tc=r.type==='pickup'?'#166534':'#9b1c1c';
-  var lc=r.type==='pickup'?'#166534':'#c0392b';
-  return '<div class="run-card" style="border-left:3px solid '+lc+'">'+
-    '<div class="run-header"><div><div class="run-title">'+r.id+' — '+r.label+'</div>'+
-    '<div class="run-meta">'+r.vehicle+(r.total_pax?' · '+r.total_pax+(r.capacity?'/'+r.capacity:'')+ ' pax':'')+'</div></div>'+
-    '<span class="badge" style="background:'+bc+';color:'+tc+'">'+r.type+'</span></div>'+
-    (r.type==='pickup'&&r.depart_venue_time?'<div style="font-size:12px;margin-bottom:3px">Depart venue: <strong>'+r.depart_venue_time+'</strong></div>':'')+
-    '<div style="font-size:12px;color:var(--text-muted)">At pick-up point: <strong style="color:var(--text)">'+r.airport_time+'</strong></div>'+
-    (r.notes?'<div style="font-size:12px;color:var(--text-muted);margin-top:6px;line-height:1.5">'+r.notes+'</div>':'')+
-    '<div class="guest-chips">'+((r.guests||[]).map(function(g){return'<span class="chip">'+g+'</span>';})).join('')+'</div>'+
-    (r.capacity?'<div style="margin-top:8px;height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(pct>90?'#f59e0b':'#34d399')+';border-radius:99px"></div></div>':'')+
-    '</div>';
-}
-
-// ══════════════════════════════════════════════════════
-// HOTEL v3 — individual rooms, floor config
-// ══════════════════════════════════════════════════════
-
-// Parse a room-number string like "102, 104, 107, 201-205, 301"
-function parseRoomNumbers(str){
-  var nums = [];
-  var parts = (str||'').split(',');
-  parts.forEach(function(p){
-    p = p.trim();
-    var range = p.match(/^(\d+)\s*[-–]\s*(\d+)$/);
-    if(range){
-      var from=parseInt(range[1]), to=parseInt(range[2]);
-      for(var n=from;n<=to;n++) nums.push(n);
-    } else {
-      var n=parseInt(p);
-      if(!isNaN(n)) nums.push(n);
-    }
-  });
-  // deduplicate and sort
-  var seen={};
-  return nums.filter(function(n){ if(seen[n]) return false; seen[n]=true; return true; }).sort(function(a,b){return a-b;});
-}
-
-function roomsToString(arr){
-  if(!arr||!arr.length) return '';
-  return arr.join(', ');
-}
-
-// Build groups from sheet data
-function buildGroups(){
-  var grouped = {};
-  guests.forEach(function(g){
-    var rn = (g['Room Number']||'').trim();
-    var ac = (g['Accomodation']||'').toLowerCase();
-    if(ac!=='yes' && !rn) return;
-    var key = rn ? 'rn_'+rn : 'solo_'+g['Names'];
-    if(!grouped[key]) grouped[key]=[];
-    grouped[key].push(g);
-  });
-  return Object.keys(grouped).map(function(id){
-    var members=grouped[id];
-    var totalPax=members.reduce(function(a,g){return a+qty(g);},0);
-    var sides=[...new Set(members.map(function(g){return g['Side'];}))];
-    var side=sides.length===1?sides[0]:'Mixed';
-    var rsvps=members.map(function(g){return rsvpVal(g);});
-    var allNo=rsvps.every(function(r){return r==='no';});
-    var anyWait=rsvps.some(function(r){return r==='waiting';});
-    var anyYes=rsvps.some(function(r){return r==='yes';});
-    var status=allNo?'declined':anyWait&&!anyYes?'waiting':anyWait?'partial':'confirmed';
-    return {id:id,members:members,totalPax:totalPax,side:side,status:status};
-  }).sort(function(a,b){
-    if(a.side<b.side) return -1;
-    if(a.side>b.side) return 1;
-    return a.id<b.id?-1:1;
-  });
-}
-
-function renderHotelPage(){
-  var groups=buildGroups();
-  renderHotelStats(groups);
-  renderFloorBuilder();
-  renderGroupList(groups);
-  renderFloorMap(groups);
-}
-
-function renderHotelStats(groups){
-  var active=groups.filter(function(g){return g.status!=='declined';});
-  var assigned=active.filter(function(g){return roomAssignments[g.id];});
-  var totalPax=active.reduce(function(a,g){return a+g.totalPax;},0);
-  var assignedPax=assigned.reduce(function(a,g){return a+g.totalPax;},0);
-  var unassignedPax=totalPax-assignedPax;
-  var totalRooms=floors.reduce(function(a,fl){return a+fl.rooms.length;},0);
-  var usedRooms=Object.keys(roomAssignments).length;
-
-  document.getElementById('hotel-stats').innerHTML=
-    '<div class="hsb"><div class="hsb-val">'+totalPax+'</div><div class="hsb-lbl">Total pax needing rooms</div></div>'+
-    '<div class="hsb"><div class="hsb-val">'+active.length+'</div><div class="hsb-lbl">Total groups</div></div>'+
-    '<div class="hsb"><div class="hsb-val" style="color:#166534">'+assignedPax+'</div><div class="hsb-lbl">Pax assigned</div></div>'+
-    '<div class="hsb"><div class="hsb-val" style="color:#92400e">'+unassignedPax+'</div><div class="hsb-lbl">Pax unassigned</div></div>'+
-    '<div class="hsb"><div class="hsb-val">'+usedRooms+'/'+totalRooms+'</div><div class="hsb-lbl">Rooms used</div></div>';
-}
-
-function renderFloorBuilder(){
-  var container=document.getElementById('floor-rows');
-  container.innerHTML=floors.map(function(fl,idx){
-    return '<div class="floor-row" id="flrow-'+fl.id+'">'+
-      '<input type="text" class="fl-name" value="'+fl.label+'" placeholder="Floor name" onchange="updateFloorLabel('+idx+',this.value)">'+
-      '<div style="flex:2;min-width:200px">'+
-        '<input type="text" class="fl-rooms-input" value="'+roomsToString(fl.rooms)+'" placeholder="e.g. 102, 104, 201-205, 301" onchange="updateFloorRooms('+idx+',this.value)">'+
-        '<div class="fl-rooms-hint">'+fl.rooms.length+' rooms configured</div>'+
-      '</div>'+
-      '<select class="fl-side-sel" onchange="updateFloorSide('+idx+',this.value)">'+
-        '<option value="bride"'+(fl.side==='bride'?' selected':'')+'>💗 Bride</option>'+
-        '<option value="groom"'+(fl.side==='groom'?' selected':'')+'>💙 Groom</option>'+
-        '<option value="mixed"'+(fl.side==='mixed'?' selected':'')+'>🤝 Mixed</option>'+
-      '</select>'+
-      (floors.length>1?'<button class="fl-remove" onclick="removeFloor('+idx+')">✕</button>':'')+
-    '</div>';
-  }).join('');
-}
-
-function updateFloorLabel(idx,val){ if(floors[idx]) floors[idx].label=val; savePersist(); }
-function updateFloorRooms(idx,val){
-  if(!floors[idx]) return;
-  floors[idx].rooms = parseRoomNumbers(val);
-  renderHotelPage();
-  savePersist();
-}
-function updateFloorSide(idx,val){
-  if(!floors[idx]) return;
-  floors[idx].side=val;
-  renderHotelPage();
-  savePersist();
-}
-function addFloor(){
-  var newId=Date.now();
-  floors.push({id:newId,label:'Floor '+(floors.length+1),side:'mixed',rooms:[]});
-  renderHotelPage();
-  savePersist();
-}
-function removeFloor(idx){
-  if(floors.length<=1) return;
-  var fl=floors[idx];
-  fl.rooms.forEach(function(rn){
-    Object.keys(roomAssignments).forEach(function(gid){
-      if(roomAssignments[gid]===rn) delete roomAssignments[gid];
-    });
-  });
-  floors.splice(idx,1);
-  renderHotelPage();
-  savePersist();
-}
-function resetAllRooms(){
-  if(!confirm('Reset all room assignments?')) return;
-  roomAssignments={};
-  savePersist();
-  renderHotelPage();
-}
-
-var hotelGroupFilter='all';
-function setHotelFilter(btn,f){
-  hotelGroupFilter=f;
-  document.querySelectorAll('#hotel-filter-row .filter-btn').forEach(function(b){b.classList.remove('on');});
-  btn.classList.add('on');
-  renderGroupList(buildGroups());
-}
-
-function renderGroupList(groups){
-  var filtered=groups.filter(function(g){
-    if(hotelGroupFilter==='unassigned') return !roomAssignments[g.id] && g.status!=='declined';
-    if(hotelGroupFilter==='bride')      return g.side==='Bride';
-    if(hotelGroupFilter==='groom')      return g.side==='Groom';
-    if(hotelGroupFilter==='confirmed')  return g.status==='confirmed';
-    return true;
-  });
-
-  var container=document.getElementById('group-list');
-  if(!filtered.length){
-    container.innerHTML='<div class="empty-state" style="padding:20px"><div class="icon">🏨</div>No groups match this filter.</div>';
-    return;
-  }
-
-  // Build all available room numbers across floors
-  function roomOpts(groupId){
-    var assigned=roomAssignments[groupId]||0;
-    if(!floors.some(function(f){return f.rooms.length;})){
-      return '<option value="">— Enter room numbers in Floor setup above —</option>';
-    }
-    var opts='<option value="">— Assign room —</option>';
-    floors.forEach(function(fl){
-      if(!fl.rooms.length) return;
-      opts+='<optgroup label="'+fl.label+' ('+fl.rooms.length+' rooms)">';
-      fl.rooms.forEach(function(rnum){
-        var taken=false;
-        Object.keys(roomAssignments).forEach(function(gid){
-          if(roomAssignments[gid]===rnum && gid!==groupId) taken=true;
-        });
-        if(!taken) opts+='<option value="'+rnum+'"'+(assigned===rnum?' selected':'')+'>'+rnum+'</option>';
-      });
-      opts+='</optgroup>';
-    });
-    return opts;
-  }
-
-  container.innerHTML=filtered.map(function(g,i){
-    var names=g.members.map(function(m){return m['Names'];}).join(', ');
-    var rsvpSummary=g.members.map(function(m){
-      var r=rsvpVal(m);
-      var fn=m['Names'].split(' ')[0];
-      return r==='yes'?'<span style="color:#166534">'+fn+'</span>':
-             r==='no' ?'<span style="color:#9b1c1c;text-decoration:line-through">'+fn+'</span>':
-             '<span style="color:#92400e">'+fn+'?</span>';
-    }).join(', ');
-    var sc_=g.side==='Bride'?'#e8728a':g.side==='Groom'?'#2563eb':'#7c3aed';
-    var assigned=roomAssignments[g.id];
-    var rowClass='group-row'+(g.status==='declined'?' declined':'');
-    var label=g.id.startsWith('rn_')?'Room '+g.id.slice(3)+' group':names;
-    return '<div class="'+rowClass+'" data-idx="'+i+'">'+
-      '<div class="gr-names"><strong>'+label+'</strong><span>'+rsvpSummary+'</span></div>'+
-      '<span class="badge" style="background:'+(g.side==='Bride'?'#fdf0f3':g.side==='Groom'?'#eff6ff':'#f5f3ff')+';color:'+sc_+'">'+g.side+'</span>'+
-      '<span class="gr-pax">'+g.totalPax+' pax</span>'+
-      (g.status!=='declined'
-        ?'<select class="gr-sel" data-gid="'+encodeURIComponent(g.id)+'">'+roomOpts(g.id)+'</select>'+(assigned?'<span class="gr-assigned">→ Rm '+assigned+'</span>':'')
-        :'<span class="badge red">All declined</span>')+
-    '</div>';
-  }).join('');
-
-  container.querySelectorAll('select.gr-sel').forEach(function(sel){
-    sel.addEventListener('change',function(){
-      var gid=decodeURIComponent(sel.getAttribute('data-gid'));
-      var val=parseInt(sel.value);
-      if(!sel.value) delete roomAssignments[gid];
-      else roomAssignments[gid]=val;
-      savePersist();
-      renderHotelPage();
-    });
-  });
-}
-
-function renderFloorMap(groups){
-  // Build room->group lookup
-  var r2g={};
-  Object.keys(roomAssignments).forEach(function(gid){
-    var grp=groups.find(function(g){return g.id===gid;});
-    if(grp) r2g[roomAssignments[gid]]=grp;
-  });
-
-  var mapEl=document.getElementById('floor-map');
-  if(!floors.some(function(f){return f.rooms.length;})){
-    mapEl.innerHTML='<div class="empty-state" style="padding:24px"><div class="icon">🏨</div>Enter room numbers in the Floor setup above to see the map.</div>';
-    return;
-  }
-
-  var html='';
-  floors.forEach(function(fl){
-    if(!fl.rooms.length) return;
-    var sideIcon=fl.side==='bride'?'💗':fl.side==='groom'?'💙':'🤝';
-    var usedCount=fl.rooms.filter(function(rn){return r2g[rn];}).length;
-    html+='<div class="floor-map-section">'+
-      '<h4>'+sideIcon+' '+fl.label+' <span>('+usedCount+'/'+fl.rooms.length+' occupied)</span></h4>'+
-      '<div class="room-grid-v3">'+
-      fl.rooms.map(function(rnum){
-        var grp=r2g[rnum];
-        if(grp){
-          var sc_=grp.side==='Bride'?'occ-bride':grp.side==='Groom'?'occ-groom':'occ-mixed';
-          var firstName=grp.members[0]['Names'].split(' ')[0];
-          var allNames=grp.members.map(function(m){return m['Names'];}).join(', ');
-          var paxLabel=grp.members.length>1?grp.members.length+' pax':'';
-          return '<div class="rt3 '+sc_+'" data-rnum="'+rnum+'" data-action="unassign" title="'+allNames+' — click to unassign">'+
-            '<div class="rt3-num">'+rnum+'</div>'+
-            '<div class="rt3-name">'+firstName+(grp.members.length>1?'+':'')+'</div>'+
-            (paxLabel?'<div class="rt3-sub">'+paxLabel+'</div>':'')+
-            '</div>';
-        } else {
-          var freeClass='free-'+fl.side;
-          return '<div class="rt3 '+freeClass+'" data-rnum="'+rnum+'" data-floor-id="'+fl.id+'" data-action="assign" title="Room '+rnum+' — click to assign">'+
-            '<div class="rt3-num">'+rnum+'</div>'+
-            '<div class="rt3-sub" style="font-size:9px;color:var(--text-light)">assign</div>'+
-            '</div>';
-        }
-      }).join('')+
-      '</div></div>';
-  });
-  mapEl.innerHTML=html;
-
-  // Event delegation
-  mapEl.addEventListener('click',function(e){
-    var tile=e.target.closest('[data-action]');
-    if(!tile) return;
-    var rnum=parseInt(tile.getAttribute('data-rnum'));
-    var action=tile.getAttribute('data-action');
-    if(action==='unassign'){
-      var entry=Object.entries(roomAssignments).find(function(kv){return kv[1]===rnum;});
-      if(entry){ delete roomAssignments[entry[0]]; savePersist(); renderHotelPage(); }
-    } else if(action==='assign'){
-      openPicker(rnum,e);
-    }
-  });
-}
-
-// Picker
-function openPicker(rnum,e){
-  pickerTargetRoom=rnum;
-  var groups=buildGroups();
-  var unassigned=groups.filter(function(g){return g.status!=='declined'&&!roomAssignments[g.id];});
-  document.getElementById('picker-room-label').textContent='#'+rnum;
-  var sel=document.getElementById('picker-group-sel');
-  sel.innerHTML='<option value="">— select group —</option>'+
-    unassigned.map(function(g){
-      var names=g.members.map(function(m){return m['Names'];}).join(', ');
-      return '<option value="'+encodeURIComponent(g.id)+'">'+g.side+' · '+names+' ('+g.totalPax+' pax)</option>';
-    }).join('');
-  var picker=document.getElementById('room-picker');
-  picker.style.display='block';
-  var x=Math.min(e.clientX,window.innerWidth-340);
-  var y=Math.min(e.clientY+10,window.innerHeight-160);
-  picker.style.left=x+'px';
-  picker.style.top=y+'px';
-}
-function confirmPick(){
-  var gid=decodeURIComponent(document.getElementById('picker-group-sel').value);
-  if(!gid||!pickerTargetRoom){ closePicker(); return; }
-  roomAssignments[gid]=pickerTargetRoom;
-  savePersist();
-  closePicker();
-  renderHotelPage();
-}
-function closePicker(){
-  document.getElementById('room-picker').style.display='none';
-  pickerTargetRoom=null;
-}
-document.addEventListener('click',function(e){
-  var p=document.getElementById('room-picker');
-  if(p&&p.style.display!=='none'&&!p.contains(e.target)&&!e.target.closest('[data-action="assign"]')) closePicker();
-});
-
-// ══════════════════════════════════════════════════════
-// CHECKLIST
-// ══════════════════════════════════════════════════════
-function renderChecklist(){
-  var done=tasks.filter(function(t){return t.done;}).length;
-  var total=tasks.length;
-  var pct=total?Math.round(done/total*100):0;
-  document.getElementById('progress-label').textContent=done+' of '+total+' tasks complete ('+pct+'%)';
-  document.getElementById('progress-bar').style.width=pct+'%';
-  var cats=[...new Set(tasks.map(function(t){return t.cat;}))];
-  document.getElementById('checklist-items').innerHTML=cats.map(function(cat){
-    var items=tasks.filter(function(t){return t.cat===cat;});
-    return '<div style="margin-bottom:4px">'+
-      '<div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:12px 0 4px">'+cat+'</div>'+
-      items.map(function(t){
-        return '<div class="checklist-item'+(t.done?' done':'')+'">'+
-          '<input type="checkbox"'+(t.done?' checked':'')+' onchange="toggleTask('+t.id+')">'+
-          '<span class="task-text">'+t.text+'</span>'+
-          '<button onclick="removeTask('+t.id+')" style="font-size:11px;border:1px solid var(--border);background:transparent;border-radius:5px;padding:2px 8px;cursor:pointer;color:var(--text-muted)">✕</button>'+
-        '</div>';
-      }).join('')+'</div>';
-  }).join('');
-}
-function toggleTask(id){ var t=tasks.find(function(x){return x.id===id;}); if(t){t.done=!t.done;savePersist();renderChecklist();} }
-function removeTask(id){ tasks=tasks.filter(function(t){return t.id!==id;}); savePersist(); renderChecklist(); }
-function addTask(){
-  var txt=document.getElementById('task-input').value.trim();
-  if(!txt) return;
-  tasks.push({id:taskId++,text:txt,cat:document.getElementById('task-cat').value,done:false});
-  document.getElementById('task-input').value='';
-  savePersist(); renderChecklist();
-}
-
-// ══════════════════════════════════════════════════════
-// EXPORT CSV
-// ══════════════════════════════════════════════════════
-function exportCSV(){
-  var rows=[['Name','Side','RSVP','Quantity','Accommodation','Room Number','Pickup Needed','Arrival Time','Drop Needed','Drop Time','Flight Details','Train Details']];
-  guests.forEach(function(g){
-    rows.push([g['Names'],g['Side'],g['RSVP'],g['Quantity'],g['Accomodation'],g['Room Number'],g['Pick up needed'],g['Arrival Time'],g['Drop needed'],g['Drop Time'],g['Flight Details'],g['Train Details']]);
-  });
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+(c||'').toString().replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var a=document.createElement('a');
-  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='wedding-guests.csv';
-  a.click();
-}
-
-// ══════════════════════════════════════════════════════
-// GUEST UPDATE FORM (family members)
-// ══════════════════════════════════════════════════════
-function searchGuest(){
-  var q = document.getElementById('uf-search').value.trim().toLowerCase();
-  var matchEl = document.getElementById('uf-matches');
-  var formEl  = document.getElementById('uf-form');
-  if (q.length < 2) { matchEl.innerHTML=''; formEl.style.display='none'; ufSelectedGuest=null; return; }
-  var matches = guests.filter(function(g){ return (g['Names']||'').toLowerCase().includes(q); }).slice(0,8);
-  if (!matches.length) {
-    matchEl.innerHTML = '<p style="font-size:13px;color:var(--text-muted);padding:8px 0">No match found. Try a different spelling.</p>';
-    formEl.style.display = 'none';
-    return;
-  }
-  matchEl.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' +
-    matches.map(function(g,i){
-      return '<button style="text-align:left;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:13px" onclick="selectGuest('+i+',this)">' +
-        '<strong>'+g['Names']+'</strong> <span style="color:var(--text-muted);font-size:12px">· '+g['Side']+' side · '+rsvpBadge(g['RSVP'])+'</span></button>';
-    }).join('') + '</div>';
-  matchEl._matches = matches;
-  formEl.style.display = 'none';
-  ufSelectedGuest = null;
-}
-
-function selectGuest(idx, btn){
-  var matchEl = document.getElementById('uf-matches');
-  var matches = matchEl._matches || [];
-  ufSelectedGuest = matches[idx];
-  if (!ufSelectedGuest) return;
-
-  // Highlight selected
-  matchEl.querySelectorAll('button').forEach(function(b){
-    b.style.borderColor = 'var(--border-strong)';
-    b.style.background  = 'var(--surface)';
-  });
-  btn.style.borderColor = 'var(--purple)';
-  btn.style.background  = 'var(--purple-light)';
-
-  var g = ufSelectedGuest;
-
-  // Set a <select> by value, case-insensitive fallback
-  function setSelect(id, val){
-    var sel = document.getElementById(id);
-    if (!sel) return;
-    var v = (val||'').trim();
-    for (var i=0; i<sel.options.length; i++){
-      if (sel.options[i].value === v){ sel.selectedIndex=i; return; }
-    }
-    var vl = v.toLowerCase();
-    for (var j=0; j<sel.options.length; j++){
-      if (sel.options[j].value.toLowerCase() === vl){ sel.selectedIndex=j; return; }
-    }
-    sel.selectedIndex = 0;
-  }
-
-  setSelect('uf-rsvp',   g['RSVP']);
-  setSelect('uf-pickup', g['Pick up needed']);
-  setSelect('uf-drop',   g['Drop needed']);
-  setSelect('uf-accom',  (g['Accomodation']||'').toLowerCase()==='yes' ? 'Yes' : 'No');
-
-  document.getElementById('uf-qty').value      = g['Quantity']       || '1';
-  document.getElementById('uf-arrtime').value  = g['Arrival Time']   || '';
-  document.getElementById('uf-flight').value   = g['Flight Details'] || '';
-  document.getElementById('uf-train').value    = g['Train Details']  || '';
-  document.getElementById('uf-droptime').value = g['Drop Time']      || '';
-
-  document.getElementById('uf-form').style.display    = 'block';
-  document.getElementById('uf-success').style.display = 'none';
-  document.getElementById('uf-submit').style.display  = 'block';
-  document.getElementById('uf-submit').disabled       = false;
-  document.getElementById('uf-submit').textContent    = 'Save my details →';
-}
 
 async function submitUpdate(){
   if (!ufSelectedGuest){ alert('Please select your name first.'); return; }
@@ -1551,6 +1121,33 @@ async function submitUpdate(){
 // ══════════════════════════════════════════════════════
 // BOOT
 // ══════════════════════════════════════════════════════
+// ── Settings ──
+function renderSettings() {
+  var key = localStorage.getItem('anthropic_key') || '';
+  var input = document.getElementById('settings-api-key');
+  var status = document.getElementById('settings-key-status');
+  if (input) input.value = key ? '••••••••••••••••••••' + key.slice(-4) : '';
+  if (status) status.textContent = key ? '✓ API key saved (' + key.slice(0,10) + '…)' : 'No key saved yet.';
+}
+
+function saveApiKey() {
+  var val = document.getElementById('settings-api-key').value.trim();
+  if (!val || val.startsWith('•')) return;
+  if (!val.startsWith('sk-ant-')) {
+    document.getElementById('settings-key-status').textContent = '⚠ That doesn\'t look like an Anthropic key (should start with sk-ant-)';
+    return;
+  }
+  localStorage.setItem('anthropic_key', val);
+  document.getElementById('settings-key-status').textContent = '✓ Saved! You can now use the AI transport planner.';
+  document.getElementById('settings-api-key').value = '••••••••••••••••••••' + val.slice(-4);
+}
+
+function clearApiKey() {
+  localStorage.removeItem('anthropic_key');
+  document.getElementById('settings-api-key').value = '';
+  document.getElementById('settings-key-status').textContent = 'Key cleared.';
+}
+
 loadPersist();
 
 // ══════════════════════════════════════════════════════
